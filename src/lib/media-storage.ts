@@ -163,7 +163,12 @@ export function getImgproxyUrl(
     processingOptions.push('q:80'); // Default quality
   }
 
-  const optionsString = processingOptions.join('/');
+  // Encode each option segment separately so colons are sent as `%3A` while
+  // the slash separators remain part of the imgproxy path. Some proxy/WAF
+  // layers reject a raw colon in the first URL path segment.
+  const optionsString = processingOptions
+    .map((option) => encodeURIComponent(option))
+    .join('/');
   
   // Use S3 source URL format for imgproxy
   const sourceUrl = `s3://${bucket}/${objectKey}`;
