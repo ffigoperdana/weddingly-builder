@@ -1,4 +1,44 @@
 services:
+  weddingly:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      NODE_ENV: "production"
+      HOST: "0.0.0.0"
+      PORT: "4321"
+      DATABASE_URL: "${DATABASE_URL:?Set DATABASE_URL in Coolify}"
+      SESSION_SECRET: "${SESSION_SECRET:?Set SESSION_SECRET in Coolify}"
+      MINIO_ENDPOINT: "${MINIO_ENDPOINT:-http://minio:9000}"
+      MINIO_ACCESS_KEY: "${MINIO_ACCESS_KEY:?Set MINIO_ACCESS_KEY in Coolify}"
+      MINIO_SECRET_KEY: "${MINIO_SECRET_KEY:?Set MINIO_SECRET_KEY in Coolify}"
+      MINIO_BUCKET: "${MINIO_BUCKET:-weddingly}"
+      PUBLIC_MINIO_URL: "${PUBLIC_MINIO_URL:?Set PUBLIC_MINIO_URL in Coolify}"
+      PUBLIC_IMGPROXY_URL: "${PUBLIC_IMGPROXY_URL:?Set PUBLIC_IMGPROXY_URL in Coolify}"
+      SUPER_ADMIN_EMAIL: "${SUPER_ADMIN_EMAIL:-admin@owner.me}"
+      SUPER_ADMIN_PASSWORD: "${SUPER_ADMIN_PASSWORD:-}"
+      ALLOW_DEMO_SEED: "${ALLOW_DEMO_SEED:-false}"
+      SEED_USER_EMAIL: "${SEED_USER_EMAIL:-demo@weddingly.local}"
+      SEED_USER_PASSWORD: "${SEED_USER_PASSWORD:-}"
+    expose:
+      - "4321"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:4321/').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+
   minio:
     # Coolify routes public traffic to these container ports through service domains.
     image: quay.io/minio/minio:latest

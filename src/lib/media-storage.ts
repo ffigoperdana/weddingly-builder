@@ -2,6 +2,8 @@
 // MinIO: S3-compatible object storage for files
 // imgproxy: On-the-fly image processing
 
+import { env as runtimeEnv } from 'node:process';
+
 export interface UploadResult {
   success: boolean;
   url: string;
@@ -43,10 +45,12 @@ export async function uploadToMinio(
   objectKey: string,
   contentType: string,
 ): Promise<UploadResult> {
-  const endpoint = import.meta.env.MINIO_ENDPOINT;
-  const accessKey = import.meta.env.MINIO_ACCESS_KEY;
-  const secretKey = import.meta.env.MINIO_SECRET_KEY;
-  const bucket = import.meta.env.MINIO_BUCKET || 'weddingly';
+  const endpoint = runtimeEnv.MINIO_ENDPOINT ?? import.meta.env.MINIO_ENDPOINT;
+  const accessKey =
+    runtimeEnv.MINIO_ACCESS_KEY ?? import.meta.env.MINIO_ACCESS_KEY;
+  const secretKey =
+    runtimeEnv.MINIO_SECRET_KEY ?? import.meta.env.MINIO_SECRET_KEY;
+  const bucket = runtimeEnv.MINIO_BUCKET ?? import.meta.env.MINIO_BUCKET ?? 'weddingly';
 
   if (!endpoint || !accessKey || !secretKey) {
     return {
@@ -75,8 +79,12 @@ export async function uploadToMinio(
  * Get the public MinIO URL for a file (direct access, no processing)
  */
 export function getPublicUrl(objectKey: string): string {
-  const minioPublicUrl = import.meta.env.PUBLIC_MINIO_URL || import.meta.env.MINIO_PUBLIC_URL;
-  const bucket = import.meta.env.MINIO_BUCKET || 'weddingly';
+  const minioPublicUrl =
+    runtimeEnv.PUBLIC_MINIO_URL ??
+    runtimeEnv.MINIO_PUBLIC_URL ??
+    import.meta.env.PUBLIC_MINIO_URL ??
+    import.meta.env.MINIO_PUBLIC_URL;
+  const bucket = runtimeEnv.MINIO_BUCKET ?? import.meta.env.MINIO_BUCKET ?? 'weddingly';
 
   if (!minioPublicUrl) {
     console.error('MinIO public URL not configured');
@@ -106,8 +114,12 @@ export function getImgproxyUrl(
     blur?: number;
   },
 ): string {
-  const imgproxyUrl = import.meta.env.PUBLIC_IMGPROXY_URL || import.meta.env.IMGPROXY_URL;
-  const bucket = import.meta.env.MINIO_BUCKET || 'weddingly';
+  const imgproxyUrl =
+    runtimeEnv.PUBLIC_IMGPROXY_URL ??
+    runtimeEnv.IMGPROXY_URL ??
+    import.meta.env.PUBLIC_IMGPROXY_URL ??
+    import.meta.env.IMGPROXY_URL;
+  const bucket = runtimeEnv.MINIO_BUCKET ?? import.meta.env.MINIO_BUCKET ?? 'weddingly';
 
   if (!imgproxyUrl) {
     // Fallback to direct MinIO URL if imgproxy not configured
@@ -312,7 +324,7 @@ export function extractObjectKey(url: string): string | null {
     }
     
     // Handle direct MinIO URLs: /bucket/key
-    const bucket = import.meta.env.MINIO_BUCKET || 'weddingly';
+    const bucket = runtimeEnv.MINIO_BUCKET ?? import.meta.env.MINIO_BUCKET ?? 'weddingly';
     const bucketIndex = pathParts.indexOf(bucket);
     if (bucketIndex !== -1) {
       return pathParts.slice(bucketIndex + 1).join('/');

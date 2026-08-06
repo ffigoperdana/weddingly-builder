@@ -1,4 +1,17 @@
 services:
+  weddingly:
+    ports:
+      - "127.0.0.1:${APP_PORT:-4321}:4321"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: "development"
+      DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/weddingly"
+      MINIO_ENDPOINT: "http://minio:9000"
+      PUBLIC_MINIO_URL: "http://localhost:9000"
+      PUBLIC_IMGPROXY_URL: "http://localhost:8080"
+
   minio:
     ports:
       - "127.0.0.1:9000:9000"

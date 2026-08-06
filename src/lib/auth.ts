@@ -1,5 +1,6 @@
 import type { APIContext } from 'astro';
 import { createHmac, timingSafeEqual } from 'node:crypto';
+import { env as runtimeEnv } from 'node:process';
 import type { UserRole } from '@prisma/client';
 import prisma from './prisma';
 import { hashPassword, verifyPassword } from './password';
@@ -31,10 +32,11 @@ export class AuthError extends Error {
 }
 
 function getSessionSecret(): string {
-  const configuredSecret = import.meta.env.SESSION_SECRET;
+  const configuredSecret =
+    runtimeEnv.SESSION_SECRET ?? import.meta.env.SESSION_SECRET;
 
   if (configuredSecret) return configuredSecret;
-  if (import.meta.env.PROD) {
+  if (runtimeEnv.NODE_ENV === 'production' || import.meta.env.PROD) {
     throw new Error('SESSION_SECRET must be configured in production');
   }
 

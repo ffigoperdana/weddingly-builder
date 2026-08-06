@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { env as runtimeEnv } from 'node:process';
 import { login, createSession } from '../../../lib/auth';
 
 export const POST: APIRoute = async ({ request, cookies }) => {
@@ -32,7 +33,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
     cookies.set('session', sessionToken, {
       path: '/',
       httpOnly: true,
-      secure: import.meta.env.PROD,
+      secure: runtimeEnv.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 30, // 30 days
     });

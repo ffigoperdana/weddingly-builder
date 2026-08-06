@@ -13,11 +13,11 @@ Weddingly upload API -> MinIO bucket
 - MinIO is the S3-compatible object store.
 - imgproxy reads images from MinIO and serves transformed versions.
 - Audio files are served directly from MinIO because the current app returns direct audio URLs.
-- The repository root contains the deployable stack in `docker-compose.yml`.
+- The repository root contains the deployable full stack in `docker-compose.yml`.
 
 ## Docker Compose Deployment (Coolify Recommended)
 
-The Compose stack deploys MinIO, a one-time bucket initializer, and imgproxy together. It uses a named `minio_data` volume, so uploads survive container recreation and normal redeployments.
+The Compose stack deploys Weddingly, MinIO, a one-time bucket initializer, and imgproxy together. It uses a named `minio_data` volume, so uploads survive container recreation and normal redeployments.
 
 ### Deploy from GitHub in Coolify
 
@@ -28,13 +28,22 @@ The Compose stack deploys MinIO, a one-time bucket initializer, and imgproxy tog
 5. Add these environment variables to the Coolify resource:
 
 ```env
+DATABASE_URL=postgresql://wedding_user:password@coolify-postgres-host:5432/wedding
+SESSION_SECRET=replace-with-a-long-random-secret
+
 MINIO_ACCESS_KEY=replace-with-a-long-random-user
 MINIO_SECRET_KEY=replace-with-a-long-random-password
 MINIO_BUCKET=weddingly
+MINIO_ENDPOINT=http://minio:9000
+PUBLIC_MINIO_URL=https://media.example.com
+PUBLIC_IMGPROXY_URL=https://images.example.com
 
 # Public URLs used by MinIO behind Coolify's proxy
 MINIO_SERVER_URL=https://media.example.com
 MINIO_BROWSER_REDIRECT_URL=https://console.example.com
+
+SUPER_ADMIN_EMAIL=admin@owner.me
+SUPER_ADMIN_PASSWORD=replace-before-running-the-seed
 
 # Keep these empty until application-side URL signing is enabled.
 IMGPROXY_KEY=
@@ -46,62 +55,48 @@ IMGPROXY_SALT=
 
 | Service | Coolify domain | Purpose |
 |---|---|---|
+| `weddingly` | `https://invitation.example.com:4321` | Builder and invitation pages |
 | `minio` | `https://media.example.com:9000` | S3 API and public object URLs |
 | `minio` | `https://console.example.com:9001` | MinIO Console |
 | `imgproxy` | `https://images.example.com:8080` | Optimized image URLs |
 
-The Compose file intentionally uses `expose` instead of host-port mappings. Coolify's proxy publishes only the domains you assign, while the containers communicate privately over the Compose network.
-
-### Configure the Weddingly app
-
-When the app is a separate Coolify resource, use the public MinIO API domain. The hostname `minio` only works from another container in this same Compose stack or from a resource connected to the same Docker network.
-
-```env
-MINIO_ENDPOINT=https://media.example.com
-MINIO_ACCESS_KEY=replace-with-a-long-random-user
-MINIO_SECRET_KEY=replace-with-a-long-random-password
-MINIO_BUCKET=weddingly
-PUBLIC_MINIO_URL=https://media.example.com
-PUBLIC_IMGPROXY_URL=https://images.example.com
-```
-
-If you deliberately attach the Weddingly app to the same Coolify network, the server-side endpoint can instead be the internal service URL, for example `http://minio:9000`. Keep `PUBLIC_MINIO_URL` and `PUBLIC_IMGPROXY_URL` set to public HTTPS domains because browsers need to load the returned media URLs.
+The Compose file intentionally uses `expose` instead of host-port mappings. Coolify's proxy publishes only the domains you assign, while the containers communicate privately over the Compose network. The Weddingly container uses `http://minio:9000` internally; browsers use the public HTTPS domains.
 
 ### Run locally
 
-Copy `.env.example` to `.env`, then use the local override to bind the services to localhost:
+Copy `.env.example` to `.env`, then use the local and database overrides to build the complete stack locally:
 
 ```bash
-docker compose --env-file .env -f docker-compose.yml -f docker-compose.local.yml up -d
+docker compose --env-file .env -f docker-compose.yml -f docker-compose.local.yml -f docker-compose.db.local.yml up -d --build
 ```
 
 Local endpoints:
 
+- Weddingly: `http://localhost:4321`
 - MinIO API: `http://localhost:9000`
 - MinIO Console: `http://localhost:9001`
 - imgproxy: `http://localhost:8080`
 
-### Optional local PostgreSQL
+### Local PostgreSQL
 
-The root Compose file does not start PostgreSQL by default. For local development, add the opt-in database override and keep the production `DATABASE_URL` separate:
+The root Compose file does not start PostgreSQL by default. The local override adds PostgreSQL to the same network so the containerized Weddingly app can reach it at `postgres:5432`:
 
 ```bash
 docker compose --env-file .env -f docker-compose.yml -f docker-compose.local.yml -f docker-compose.db.local.yml up -d
 ```
 
-The local database is available at `postgresql://postgres:postgres@localhost:5433/weddingly`. The example variables are in `.env.docker.example`; do not replace a production or managed-database URL accidentally. Apply the Prisma migrations to the database selected by `DATABASE_URL`:
+The host-side database is available at `postgresql://postgres:postgres@localhost:5433/weddingly`. Inside the Compose app, the override uses `postgresql://postgres:postgres@postgres:5432/weddingly`. The example variables are in `.env.docker.example`; do not replace a production or managed-database URL accidentally. The app runs `prisma migrate deploy` automatically on startup:
 
 ```powershell
-$env:DATABASE_URL = "postgresql://postgres:postgres@localhost:5433/weddingly"
-npx prisma migrate deploy
+docker compose --env-file .env -f docker-compose.yml -f docker-compose.local.yml -f docker-compose.db.local.yml logs weddingly
 ```
 
-For Coolify production, keep using the managed/external PostgreSQL URL and run `prisma migrate deploy` against that production database during deployment. Compose only supplies the database server; Prisma migrations still need to be applied to whichever database the app uses.
+For Coolify production, keep using the internal PostgreSQL URL from the separate Coolify PostgreSQL resource, with `/wedding` as the database name. Enable Coolify's **Connect to Predefined Network** on the Compose resource so the app can reach the database stack. The Compose stack supplies the app and media services; its `weddingly` service applies Prisma migrations to the configured database. It does not start PostgreSQL.
 
 Stop the local stack with:
 
 ```bash
-docker compose --env-file .env -f docker-compose.yml -f docker-compose.local.yml down
+docker compose --env-file .env -f docker-compose.yml -f docker-compose.local.yml -f docker-compose.db.local.yml down
 ```
 
 The bucket initializer is idempotent. If it needs to be run again manually:

@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client';
+import { env as runtimeEnv } from 'node:process';
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
@@ -7,9 +8,14 @@ const globalForPrisma = globalThis as unknown as {
 const prisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    log: import.meta.env.DEV ? ['query', 'error', 'warn'] : ['error'],
+    log:
+      runtimeEnv.NODE_ENV !== 'production' && import.meta.env.DEV
+        ? ['query', 'error', 'warn']
+        : ['error'],
   });
 
-if (import.meta.env.DEV) globalForPrisma.prisma = prisma;
+if (runtimeEnv.NODE_ENV !== 'production' && import.meta.env.DEV) {
+  globalForPrisma.prisma = prisma;
+}
 
 export default prisma;

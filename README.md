@@ -260,8 +260,9 @@ Make sure to:
 
 1. Set up environment variables
 2. Configure PostgreSQL database
-3. Deploy the MinIO + imgproxy Compose stack from [`docker-compose.yml`](./docker-compose.yml) (see [MEDIA_STORAGE_SETUP.md](./MEDIA_STORAGE_SETUP.md))
-4. Follow [COOLIFY_DEPLOYMENT.md](./COOLIFY_DEPLOYMENT.md); the production start command runs `prisma migrate deploy` automatically
+3. Create PostgreSQL as a separate Coolify database resource
+4. Deploy the complete Weddingly + MinIO + imgproxy stack from [`docker-compose.yml`](./docker-compose.yml)
+5. Follow [COOLIFY_DEPLOYMENT.md](./COOLIFY_DEPLOYMENT.md); the production start command runs `prisma migrate deploy` automatically
 
 ## 📖 Documentation
 

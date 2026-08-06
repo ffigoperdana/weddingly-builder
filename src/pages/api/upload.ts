@@ -1,4 +1,5 @@
 import type { APIRoute } from 'astro';
+import { env as runtimeEnv } from 'node:process';
 import { requireAuth } from '../../lib/auth';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import {
@@ -9,9 +10,11 @@ import {
 
 // Initialize S3 client for MinIO
 function getS3Client(): S3Client {
-  const endpoint = import.meta.env.MINIO_ENDPOINT;
-  const accessKey = import.meta.env.MINIO_ACCESS_KEY;
-  const secretKey = import.meta.env.MINIO_SECRET_KEY;
+  const endpoint = runtimeEnv.MINIO_ENDPOINT ?? import.meta.env.MINIO_ENDPOINT;
+  const accessKey =
+    runtimeEnv.MINIO_ACCESS_KEY ?? import.meta.env.MINIO_ACCESS_KEY;
+  const secretKey =
+    runtimeEnv.MINIO_SECRET_KEY ?? import.meta.env.MINIO_SECRET_KEY;
 
   return new S3Client({
     endpoint,
@@ -72,10 +75,12 @@ export const POST: APIRoute = async (context) => {
     }
 
     // Check MinIO configuration
-    const endpoint = import.meta.env.MINIO_ENDPOINT;
-    const accessKey = import.meta.env.MINIO_ACCESS_KEY;
-    const secretKey = import.meta.env.MINIO_SECRET_KEY;
-    const bucket = import.meta.env.MINIO_BUCKET || 'weddingly';
+    const endpoint = runtimeEnv.MINIO_ENDPOINT ?? import.meta.env.MINIO_ENDPOINT;
+    const accessKey =
+      runtimeEnv.MINIO_ACCESS_KEY ?? import.meta.env.MINIO_ACCESS_KEY;
+    const secretKey =
+      runtimeEnv.MINIO_SECRET_KEY ?? import.meta.env.MINIO_SECRET_KEY;
+    const bucket = runtimeEnv.MINIO_BUCKET ?? import.meta.env.MINIO_BUCKET ?? 'weddingly';
 
     if (!endpoint || !accessKey || !secretKey) {
       return new Response(

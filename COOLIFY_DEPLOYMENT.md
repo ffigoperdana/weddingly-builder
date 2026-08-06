@@ -3,12 +3,11 @@
 Panduan ini memakai arsitektur yang paling mudah dirawat untuk homelab:
 
 ```text
-invitation.fgdev.tech       -> Weddingly Astro app
 PostgreSQL Coolify resource -> Prisma database
-MinIO + imgproxy Compose    -> storage dan optimasi gambar
+Weddingly Docker Compose    -> app + MinIO + imgproxy
 ```
 
-`docker-compose.yml` di root hanya berisi MinIO, initializer bucket, dan imgproxy. File `docker-compose.local.yml` serta `docker-compose.db.local.yml` hanya untuk laptop; jangan dipakai sebagai Compose production.
+`docker-compose.yml` di root berisi service Weddingly, MinIO, initializer bucket, dan imgproxy. File `docker-compose.local.yml` serta `docker-compose.db.local.yml` hanya untuk laptop; jangan dipakai sebagai Compose production.
 
 ## 1. Prasyarat server dan DNS
 
@@ -32,36 +31,61 @@ HTTPS akan diterbitkan oleh proxy Coolify setelah DNS sudah mengarah benar. Jang
 3. Gunakan database, username, dan password yang kuat.
 4. Pastikan storage/database volume bersifat persistent.
 5. Jangan publish port PostgreSQL ke internet.
-6. Salin internal connection string yang diberikan Coolify untuk `DATABASE_URL`.
+6. Database `wedding` sudah dibuat dengan owner `wedding_user`, jadi gunakan user tersebut untuk aplikasi. Nama resource boleh tetap seperti `postgresql-database-...`; yang dipakai aplikasi adalah nama database di bagian akhir URL.
+7. Salin internal connection string yang diberikan Coolify untuk `DATABASE_URL`, lalu ganti username menjadi `wedding_user` dan pastikan bagian akhirnya menggunakan `/wedding`.
 
 Jangan gunakan `localhost:5433` di production. `localhost` dari dalam container berarti container aplikasi itu sendiri. Port `5433` adalah mapping PostgreSQL Docker lokal di laptop.
 
-## 3. Deploy MinIO + imgproxy sebagai Compose
+Jika resource PostgreSQL sudah terlanjur running dengan database awal `postgres`, jangan menghapus volume hanya untuk mengganti nama database. Buka tab **Terminal** pada resource PostgreSQL dan buat database baru:
 
-1. Buat resource baru dari repository yang sama.
+```bash
+psql -U postgres -d postgres -c "CREATE DATABASE wedding;"
+```
+
+Jika database `wedding` sudah ada, perintah tersebut akan gagal dengan pesan duplicate database tetapi data tetap aman. Setelah itu gunakan URL yang sama seperti di Coolify, hanya database terakhirnya menjadi `wedding`, contohnya:
+
+```env
+DATABASE_URL=postgresql://wedding_user:<password>@<internal-postgres-host>:5432/wedding
+```
+
+## 3. Deploy full stack Weddingly sebagai Compose
+
+1. Buat satu resource baru dari repository yang sama. Resource ini akan berisi app Weddingly, MinIO, initializer bucket, dan imgproxy.
 2. Pilih build pack **Docker Compose**.
 3. Base directory: `/`.
 4. Compose file: `/docker-compose.yml`.
-5. Masukkan environment variables berikut di resource Compose:
+5. Aktifkan **Connect to Predefined Network** pada resource Compose agar service `weddingly` dapat menjangkau PostgreSQL resource yang berada di stack berbeda.
+6. Masukkan environment variables berikut di resource Compose:
 
 ```env
+DATABASE_URL=postgresql://wedding_user:<password>@<internal-postgres-host>:5432/wedding
+SESSION_SECRET=<random-secret-minimal-32-karakter>
+
 MINIO_ACCESS_KEY=<random-user>
 MINIO_SECRET_KEY=<random-password-yang-panjang>
 MINIO_BUCKET=weddingly
+MINIO_ENDPOINT=http://minio:9000
+PUBLIC_MINIO_URL=https://media.fgdev.tech
+PUBLIC_IMGPROXY_URL=https://images.fgdev.tech
+
 MINIO_SERVER_URL=https://media.fgdev.tech
 MINIO_BROWSER_REDIRECT_URL=https://console.fgdev.tech
 AWS_REGION=us-east-1
 IMGPROXY_KEY=
 IMGPROXY_SALT=
+
+SUPER_ADMIN_EMAIL=admin@owner.me
+SUPER_ADMIN_PASSWORD=<password-admin-production-yang-kuat>
 ```
 
 `IMGPROXY_KEY` dan `IMGPROXY_SALT` sengaja kosong untuk versi aplikasi sekarang karena URL imgproxy yang dihasilkan aplikasi belum ditandatangani.
 
-6. Deploy stack.
-7. Di bagian domain service Compose, arahkan service seperti ini:
+7. Deploy stack.
+8. Di bagian domain service Compose, arahkan service seperti ini:
 
 | Service | Domain Coolify | Port container |
 |---|---|---:|
+| `weddingly` | `https://invitation.fgdev.tech:4321` | 4321 |
 | `minio` | `https://media.fgdev.tech:9000` | 9000 |
 | `minio` | `https://console.fgdev.tech:9001` | 9001 |
 | `imgproxy` | `https://images.fgdev.tech:8080` | 8080 |
@@ -70,50 +94,13 @@ Port di belakang domain hanya memberi tahu proxy Coolify port internal yang ditu
 
 `minio-init` memang one-shot container. Setelah bucket dibuat, statusnya boleh `Exited (0)`; itu bukan tanda upload gagal. Bucket `weddingly` dibuat dan diberi akses download read-only oleh initializer.
 
-## 4. Deploy aplikasi Weddingly
+Service `weddingly` mengakses MinIO secara internal melalui `http://minio:9000`. Browser tetap memakai `media.fgdev.tech` dan `images.fgdev.tech` dari environment variable public. PostgreSQL tidak dijalankan oleh Compose ini; koneksinya datang dari resource PostgreSQL Coolify melalui `DATABASE_URL`.
 
-Buat resource aplikasi kedua dari repository dan branch production yang sama:
+## 4. Migrasi dan akun super admin
 
-1. Build pack: **Nixpacks**.
-2. Base directory: `/`.
-3. Install command: `npm ci`.
-4. Build command: `npm run build`.
-5. Start command: `npm run start`.
-6. Ports Exposes: `4321`.
-7. Domain: `https://invitation.fgdev.tech`.
-8. Health check: `GET /` pada port `4321`.
+Deploy resource Compose. Lihat deployment log service `weddingly` dan pastikan baris `prisma migrate deploy` selesai tanpa error.
 
-`npm run build` sekarang menjalankan `prisma generate` terlebih dahulu. `npm run start` menjalankan `prisma migrate deploy`, lalu menyalakan server Astro standalone di `dist/server/entry.mjs`.
-
-Set environment variables aplikasi di Coolify:
-
-```env
-NODE_ENV=production
-HOST=0.0.0.0
-PORT=4321
-
-DATABASE_URL=<internal-connection-string-dari-Coolify-PostgreSQL>
-SESSION_SECRET=<random-secret-minimal-32-karakter>
-
-MINIO_ENDPOINT=https://media.fgdev.tech
-MINIO_ACCESS_KEY=<nilai-yang-sama-dengan-Compose>
-MINIO_SECRET_KEY=<nilai-yang-sama-dengan-Compose>
-MINIO_BUCKET=weddingly
-PUBLIC_MINIO_URL=https://media.fgdev.tech
-PUBLIC_IMGPROXY_URL=https://images.fgdev.tech
-
-# Dipakai hanya saat menjalankan seed pertama kali.
-SUPER_ADMIN_EMAIL=admin@owner.me
-SUPER_ADMIN_PASSWORD=<password-admin-production-yang-kuat>
-```
-
-Karena `prisma.config.ts` membaca `DATABASE_URL` saat dependency/build dipasang, tandai `DATABASE_URL` tersedia pada fase build dan runtime di Coolify. Jangan menampilkan nilainya di log. Untuk deployment yang lebih ketat, gunakan build secret Coolify atau Dockerfile dengan secret mount.
-
-## 5. Migrasi dan akun super admin
-
-Deploy aplikasi. Lihat deployment log dan pastikan baris `prisma migrate deploy` selesai tanpa error.
-
-Setelah container aplikasi sudah hidup, buka terminal resource aplikasi di Coolify dan jalankan satu kali:
+Setelah service `weddingly` sudah hidup, buka terminal service tersebut di resource Compose dan jalankan satu kali:
 
 ```bash
 npm run db:seed
@@ -129,7 +116,7 @@ Ubah password admin melalui environment variable sebelum menjalankan seed. Janga
 
 Jika memang perlu membuat user demo sementara, set `ALLOW_DEMO_SEED=true`, `SEED_USER_EMAIL`, dan `SEED_USER_PASSWORD` hanya untuk eksekusi itu, lalu hapus/ubah kembali variable tersebut.
 
-## 6. Smoke test setelah deploy
+## 5. Smoke test setelah deploy
 
 1. Buka `https://invitation.fgdev.tech/login`.
 2. Login sebagai `admin@owner.me`.
@@ -143,7 +130,7 @@ Jika memang perlu membuat user demo sementara, set `ALLOW_DEMO_SEED=true`, `SEED
 
 Jika muncul `502`, `404 No available server`, atau `Gateway timeout`, cek berurutan: container benar-benar listen di `0.0.0.0:4321`, **Ports Exposes** `4321`, health-check path `/`, dan log start command.
 
-## 7. Backup dan keamanan
+## 6. Backup dan keamanan
 
 - Backup PostgreSQL secara terjadwal dan uji restore.
 - Backup bucket/volume `minio_data`; backup Coolify sendiri tidak otomatis berarti data volume aplikasi ikut ter-backup.
@@ -153,22 +140,22 @@ Jika muncul `502`, `404 No available server`, atau `Gateway timeout`, cek beruru
 - Untuk sekarang jangan mengganti image Compose dari `latest` tanpa rencana; setelah deployment pertama stabil, pin versi image MinIO, `minio/mc`, dan imgproxy supaya redeploy tidak mendapat perubahan tak terduga.
 - Simpan secret hanya di Coolify, bukan di `.env` yang di-commit.
 
-## 8. Alur deploy berikutnya
+## 7. Alur deploy berikutnya
 
 ```text
 commit/push ke branch production
         |
         v
-Coolify build -> npm ci -> npm run build
+Coolify Compose build -> npm ci -> npm run build
         |
         v
-container start -> prisma migrate deploy -> Astro :4321
+Weddingly start -> prisma migrate deploy -> Astro :4321
         |
         v
 https://invitation.fgdev.tech
 ```
 
-Resource Compose media juga dapat ikut ter-trigger oleh push repository yang sama. Itu aman karena volume MinIO persistent dan initializer idempotent, tetapi untuk menghindari redeploy media setiap ada perubahan UI, nanti media stack dapat dipindahkan ke repository infra terpisah atau auto-deploy-nya dimatikan.
+Satu resource Compose akan me-redeploy app dan media stack bersama-sama pada setiap push. Itu memang trade-off yang dipilih agar deployment dan debugging tetap sederhana; volume MinIO tetap persistent dan initializer idempotent.
 
 ## Referensi resmi
 
