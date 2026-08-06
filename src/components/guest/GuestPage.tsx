@@ -6,51 +6,23 @@ import { GuestHeroSection } from './GuestHeroSection';
 import { GuestEventsSection } from './GuestEventsSection';
 import { GuestStorySection } from './GuestStorySection';
 import { GuestGallerySection } from './GuestGallerySection';
-import { GuestRegistrySection } from './GuestRegistrySection';
 import { RSVPForm } from './RSVPForm';
+import {
+  GuestCountdownSection,
+  GuestCoupleDetailsSection,
+  GuestDressCodeSection,
+  GuestLiveStreamSection,
+  GuestQuoteSection,
+  GuestRegistryDetailsSection,
+  GuestStoryTimelineSection,
+  GuestWishesSection,
+} from './GuestOptionalSections';
 import { FloatingDecorations } from './decorations/FloatingDecorations';
 import { CornerDecorations } from './decorations/CornerDecorations';
 import { SectionDivider } from './decorations/SectionDivider';
 import { MusicPlayer } from './MusicPlayer';
-
-interface WeddingSite {
-  id: string;
-  slug: string;
-  isPublished: boolean;
-  primaryColor: string;
-  secondaryColor: string;
-  accentColor: string;
-  headingFont: string;
-  bodyFont: string;
-  heroEnabled: boolean;
-  brideName?: string;
-  groomName?: string;
-  weddingDate?: string;
-  heroImageUrl?: string;
-  storyEnabled: boolean;
-  storyTitle: string;
-  storyText?: string;
-  storyImage1Url?: string;
-  storyImage2Url?: string;
-  galleryEnabled: boolean;
-  galleryTitle: string;
-  galleryImages: string[];
-  registryEnabled: boolean;
-  registryTitle: string;
-  registryText?: string;
-  musicEnabled: boolean;
-  musicUrl?: string;
-  musicTitle?: string;
-  musicArtist?: string;
-  events: Array<{
-    id: string;
-    title: string;
-    date: string;
-    time: string;
-    location: string;
-    address: string;
-  }>;
-}
+import { AutumnGuestTemplate } from './AutumnGuestTemplate';
+import type { GuestWeddingSite } from './types';
 
 interface GuestPageProps {
   slug: string;
@@ -63,7 +35,7 @@ export default function GuestPage({ slug }: GuestPageProps) {
   const [passwordError, setPasswordError] = useState<string | null>(
     null,
   );
-  const [weddingSite, setWeddingSite] = useState<WeddingSite | null>(
+  const [weddingSite, setWeddingSite] = useState<GuestWeddingSite | null>(
     null,
   );
   const [guestName, setGuestName] = useState<string | null>(null);
@@ -211,6 +183,15 @@ export default function GuestPage({ slug }: GuestPageProps) {
     return null;
   }
 
+  if (weddingSite.templateId === 'autumn') {
+    return (
+      <AutumnGuestTemplate
+        weddingSite={weddingSite}
+        guestName={guestName || undefined}
+      />
+    );
+  }
+
   return (
     <>
       {/* Music Player - Always shown if enabled */}
@@ -279,6 +260,46 @@ export default function GuestPage({ slug }: GuestPageProps) {
                 />
               </ScrollAnimationWrapper>
             )}
+            {weddingSite.quoteEnabled && weddingSite.quoteText && (
+              <ScrollAnimationWrapper>
+                <GuestQuoteSection
+                  text={weddingSite.quoteText}
+                  source={weddingSite.quoteSource}
+                  primaryColor={weddingSite.primaryColor}
+                  headingFont={weddingSite.headingFont}
+                  bodyFont={weddingSite.bodyFont}
+                />
+              </ScrollAnimationWrapper>
+            )}
+            {weddingSite.coupleDetailsEnabled && (
+              <ScrollAnimationWrapper>
+                <GuestCoupleDetailsSection
+                  brideName={weddingSite.brideName}
+                  brideFullName={weddingSite.brideFullName}
+                  brideParents={weddingSite.brideParents}
+                  bridePhotoUrl={weddingSite.bridePhotoUrl}
+                  groomName={weddingSite.groomName}
+                  groomFullName={weddingSite.groomFullName}
+                  groomParents={weddingSite.groomParents}
+                  groomPhotoUrl={weddingSite.groomPhotoUrl}
+                  primaryColor={weddingSite.primaryColor}
+                  secondaryColor={weddingSite.secondaryColor}
+                  headingFont={weddingSite.headingFont}
+                  bodyFont={weddingSite.bodyFont}
+                />
+              </ScrollAnimationWrapper>
+            )}
+            {weddingSite.weddingDate && (
+              <ScrollAnimationWrapper>
+                <GuestCountdownSection
+                  weddingDate={weddingSite.weddingDate}
+                  primaryColor={weddingSite.primaryColor}
+                  secondaryColor={weddingSite.secondaryColor}
+                  headingFont={weddingSite.headingFont}
+                  bodyFont={weddingSite.bodyFont}
+                />
+              </ScrollAnimationWrapper>
+            )}
             {/* Divider */}
             {weddingSite.heroEnabled &&
               weddingSite.events &&
@@ -295,6 +316,18 @@ export default function GuestPage({ slug }: GuestPageProps) {
                   events={weddingSite.events}
                   primaryColor={weddingSite.primaryColor}
                   secondaryColor={weddingSite.secondaryColor}
+                  headingFont={weddingSite.headingFont}
+                  bodyFont={weddingSite.bodyFont}
+                />
+              </ScrollAnimationWrapper>
+            )}
+            {weddingSite.dressCodeEnabled && (
+              <ScrollAnimationWrapper>
+                <GuestDressCodeSection
+                  title={weddingSite.dressCodeTitle || undefined}
+                  text={weddingSite.dressCodeText}
+                  colors={weddingSite.dressCodeColors}
+                  primaryColor={weddingSite.primaryColor}
                   headingFont={weddingSite.headingFont}
                   bodyFont={weddingSite.bodyFont}
                 />
@@ -321,6 +354,19 @@ export default function GuestPage({ slug }: GuestPageProps) {
                 />
               </ScrollAnimationWrapper>
             )}
+            {weddingSite.storyTimelineEnabled &&
+              weddingSite.storyTimeline &&
+              weddingSite.storyTimeline.length > 0 && (
+                <ScrollAnimationWrapper>
+                  <GuestStoryTimelineSection
+                    title="Perjalanan Kami"
+                    items={weddingSite.storyTimeline}
+                    primaryColor={weddingSite.primaryColor}
+                    headingFont={weddingSite.headingFont}
+                    bodyFont={weddingSite.bodyFont}
+                  />
+                </ScrollAnimationWrapper>
+              )}
             {/* Divider */}
             {weddingSite.galleryEnabled && (
               <SectionDivider
@@ -339,6 +385,16 @@ export default function GuestPage({ slug }: GuestPageProps) {
                 />
               </ScrollAnimationWrapper>
             )}
+            {weddingSite.liveStreamEnabled && (
+              <ScrollAnimationWrapper>
+                <GuestLiveStreamSection
+                  url={weddingSite.liveStreamUrl}
+                  primaryColor={weddingSite.primaryColor}
+                  headingFont={weddingSite.headingFont}
+                  bodyFont={weddingSite.bodyFont}
+                />
+              </ScrollAnimationWrapper>
+            )}
             {/* Divider */}
             {weddingSite.registryEnabled && (
               <SectionDivider
@@ -349,9 +405,11 @@ export default function GuestPage({ slug }: GuestPageProps) {
             {/* Registry Section */}
             {weddingSite.registryEnabled && (
               <ScrollAnimationWrapper>
-                <GuestRegistrySection
-                  registryTitle={weddingSite.registryTitle}
+                <GuestRegistryDetailsSection
+                  title={weddingSite.registryTitle}
                   registryText={weddingSite.registryText}
+                  accounts={weddingSite.bankAccounts}
+                  giftAddress={weddingSite.giftAddress}
                   primaryColor={weddingSite.primaryColor}
                   secondaryColor={weddingSite.secondaryColor}
                   headingFont={weddingSite.headingFont}
@@ -360,7 +418,8 @@ export default function GuestPage({ slug }: GuestPageProps) {
               </ScrollAnimationWrapper>
             )}
             {/* RSVP Section */}
-            <ScrollAnimationWrapper>
+            {weddingSite.rsvpEnabled !== false && (
+              <ScrollAnimationWrapper>
               <section
                 className="relative py-16 px-4 sm:py-16 overflow-hidden"
                 style={{
@@ -405,12 +464,27 @@ export default function GuestPage({ slug }: GuestPageProps) {
                         primaryColor={weddingSite.primaryColor}
                         accentColor={weddingSite.accentColor}
                         guestName={guestName || undefined}
+                        guestCountEnabled={
+                          weddingSite.rsvpGuestCountEnabled
+                        }
                       />
                     </div>
                   </div>
                 </div>
               </section>
-            </ScrollAnimationWrapper>
+              </ScrollAnimationWrapper>
+            )}
+            {weddingSite.wishesEnabled && (
+              <ScrollAnimationWrapper>
+                <GuestWishesSection
+                  siteSlug={weddingSite.slug}
+                  guestName={guestName || undefined}
+                  primaryColor={weddingSite.primaryColor}
+                  headingFont={weddingSite.headingFont}
+                  bodyFont={weddingSite.bodyFont}
+                />
+              </ScrollAnimationWrapper>
+            )}
             {/* Footer */}
             <ScrollAnimationWrapper>
               <footer

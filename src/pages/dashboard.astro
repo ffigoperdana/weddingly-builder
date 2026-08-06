@@ -1,0 +1,30 @@
+---
+import '../styles/global.css';
+import AdminDashboard from '../components/AdminDashboard';
+import { Toaster } from '../components/ui/sonner';
+import { getCurrentUser } from '../lib/auth';
+
+const user = await getCurrentUser(Astro);
+
+if (!user) {
+  return Astro.redirect('/login');
+}
+
+if (user.role === 'SUPER_ADMIN') {
+  return Astro.redirect('/admin');
+}
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Wedding Dashboard - Wedding Builder</title>
+  </head>
+
+  <body>
+    <AdminDashboard client:load />
+    <Toaster client:only="react" />
+  </body>
+</html>

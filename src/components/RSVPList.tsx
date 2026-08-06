@@ -150,6 +150,7 @@ export default function RSVPList({ siteId }: RSVPListProps) {
                     <TableHead>Name</TableHead>
                     <TableHead>Email</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Guests</TableHead>
                     <TableHead>Dietary Restrictions</TableHead>
                     <TableHead>Message</TableHead>
                     <TableHead>Submitted</TableHead>
@@ -173,6 +174,7 @@ export default function RSVPList({ siteId }: RSVPListProps) {
                           {rsvp.attending ? 'Attending' : 'Declined'}
                         </span>
                       </TableCell>
+                      <TableCell>{rsvp.guestCount || '-'}</TableCell>
                       <TableCell>
                         {rsvp.dietaryRestrictions || '-'}
                       </TableCell>

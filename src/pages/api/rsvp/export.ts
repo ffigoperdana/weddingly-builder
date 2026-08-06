@@ -16,6 +16,7 @@ export const GET: APIRoute = async (context) => {
         'Full Name',
         'Email',
         'Attending',
+        'Guest Count',
         'Dietary Restrictions',
         'Message',
         'Submitted At',
@@ -38,10 +39,11 @@ export const GET: APIRoute = async (context) => {
 
     // Create CSV
     const headers = [
-      'Full Name',
-      'Email',
-      'Attending',
-      'Dietary Restrictions',
+        'Full Name',
+        'Email',
+        'Attending',
+        'Guest Count',
+        'Dietary Restrictions',
       'Message',
       'Submitted At',
     ];
@@ -49,6 +51,7 @@ export const GET: APIRoute = async (context) => {
       rsvp.fullName,
       rsvp.email || '',
       rsvp.attending ? 'Yes' : 'No',
+      rsvp.guestCount || '',
       rsvp.dietaryRestrictions || '',
       rsvp.message || '',
       rsvp.createdAt.toISOString(),

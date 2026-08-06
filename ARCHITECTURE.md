@@ -304,21 +304,33 @@ Client Request
 └─────────────────┘
 ```
 
-## File Upload Strategy (Future Enhancement)
+## File Upload Strategy
 
 ```
-Current: URL-based
-┌──────┐      ┌────────────┐
-│ User │─────▶│ Paste URL  │
-└──────┘      │ (External) │
-              └────────────┘
-
-Future: File Upload
+Current: MinIO + imgproxy (self-hosted Docker Compose media stack)
 ┌──────┐      ┌────────────┐      ┌────────────┐      ┌──────────┐
-│ User │─────▶│ Upload File│─────▶│ Cloudinary │─────▶│ Get URL  │
-└──────┘      │ (Browser)  │      │  or S3     │      │ Store in │
+│ User │─────▶│ Upload File│─────▶│   MinIO    │─────▶│ Get URL  │
+└──────┘      │ (Browser)  │      │ (Your VPS) │      │ Store in │
               └────────────┘      └────────────┘      │    DB    │
                                                        └──────────┘
+
+Media Stack Components:
+┌─────────────────────────────────────────────────────────┐
+│                   Media Storage Stack                    │
+├─────────────────────────────────────────────────────────┤
+│                                                          │
+│  ┌─────────────┐   ┌─────────────┐                      │
+│  │  imgproxy   │   │    MinIO    │                      │
+│  │ (Processing)│◀──│  (Storage)  │                      │
+│  └─────────────┘   └─────────────┘                      │
+│                                                          │
+│  Features:                                               │
+│  • On-the-fly image transformations                     │
+│  • WebP/AVIF format conversion                          │
+│  • S3-compatible object storage                         │
+│  • URL-based processing parameters                      │
+│                                                          │
+└─────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -338,6 +350,12 @@ Future: File Upload
 - **Prisma ORM**: Database abstraction
 - **PostgreSQL**: Relational database
 
+### Media Storage
+
+- **MinIO**: S3-compatible object storage (self-hosted)
+- **imgproxy**: On-the-fly image processing (resize, crop, format conversion)
+- **ARM64 compatible**: Works on Oracle Cloud free tier
+
 ### Authentication
 
 - **Session-based**: Cookie storage
@@ -352,4 +370,4 @@ Future: File Upload
 
 ---
 
-This architecture provides a solid foundation for the wedding website builder with clear separation of concerns, security, and scalability.
+This architecture provides a solid foundation for the wedding website builder with clear separation of concerns, security, scalability, and full on-premise deployment capability.

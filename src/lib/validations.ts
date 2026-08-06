@@ -1,4 +1,22 @@
 import { z } from 'zod';
+import {
+  WEDDING_TEMPLATE_IDS,
+  type WeddingTemplateId,
+} from './templates';
+
+export const storyTimelineItemSchema = z.object({
+  id: z.string().optional(),
+  year: z.string().min(1, 'Year is required'),
+  title: z.string().min(1, 'Timeline title is required'),
+  text: z.string().min(1, 'Timeline description is required'),
+});
+
+export const bankAccountSchema = z.object({
+  id: z.string().optional(),
+  bank: z.string().min(1, 'Bank name is required'),
+  number: z.string().min(1, 'Account number is required'),
+  owner: z.string().min(1, 'Account owner is required'),
+});
 
 // Auth Schemas
 export const loginSchema = z.object({
@@ -103,6 +121,9 @@ export const publishingSchema = z.object({
 
 // Complete Wedding Site Schema
 export const weddingSiteSchema = z.object({
+  // Template
+  templateId: z.enum(WEDDING_TEMPLATE_IDS).default('classic'),
+
   // Global Styles
   primaryColor: z.string(),
   secondaryColor: z.string(),
@@ -117,12 +138,37 @@ export const weddingSiteSchema = z.object({
   weddingDate: z.date().optional().nullable(),
   heroImageUrl: z.string().optional(),
 
+  // Optional Couple Details Section
+  coupleDetailsEnabled: z.boolean().default(false),
+  brideFullName: z.string().optional(),
+  brideParents: z.string().optional(),
+  bridePhotoUrl: z.string().optional(),
+  groomFullName: z.string().optional(),
+  groomParents: z.string().optional(),
+  groomPhotoUrl: z.string().optional(),
+
+  // Optional Quote Section
+  quoteEnabled: z.boolean().default(false),
+  quoteText: z.string().optional(),
+  quoteSource: z.string().optional(),
+
   // Story Section
   storyEnabled: z.boolean(),
   storyTitle: z.string(),
   storyText: z.string().optional(),
   storyImage1Url: z.string().optional(),
   storyImage2Url: z.string().optional(),
+  storyTimelineEnabled: z.boolean().default(false),
+  storyTimeline: z.array(storyTimelineItemSchema).max(12).default([]),
+
+  // Optional Dress Code Section
+  dressCodeEnabled: z.boolean().default(false),
+  dressCodeTitle: z.string().default('Dress Code'),
+  dressCodeText: z.string().optional(),
+  dressCodeColors: z
+    .array(z.string().regex(/^#[0-9A-Fa-f]{6}$/, 'Invalid color format'))
+    .max(8)
+    .default([]),
 
   // Gallery Section
   galleryEnabled: z.boolean(),
@@ -133,12 +179,23 @@ export const weddingSiteSchema = z.object({
   registryEnabled: z.boolean(),
   registryTitle: z.string(),
   registryText: z.string().optional(),
+  bankAccounts: z.array(bankAccountSchema).max(6).default([]),
+  giftAddress: z.string().optional(),
 
   // Music Section
   musicEnabled: z.boolean(),
   musicUrl: z.string().optional(),
   musicTitle: z.string().optional(),
   musicArtist: z.string().optional(),
+
+  // Optional Live Streaming Section
+  liveStreamEnabled: z.boolean().default(false),
+  liveStreamUrl: z.string().optional(),
+
+  // RSVP and Wishes
+  rsvpEnabled: z.boolean().default(true),
+  rsvpGuestCountEnabled: z.boolean().default(false),
+  wishesEnabled: z.boolean().default(false),
 
   // Publishing
   slug: z.string().optional(),
@@ -152,6 +209,8 @@ export const weddingSiteSchema = z.object({
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
 export type EventFormData = z.infer<typeof eventSchema>;
+export type StoryTimelineItem = z.infer<typeof storyTimelineItemSchema>;
+export type BankAccount = z.infer<typeof bankAccountSchema>;
 export type WeddingSiteFormData = z.infer<typeof weddingSiteSchema>;
 
 // Database Entity Types (matching Prisma schema)
@@ -174,6 +233,7 @@ export interface WeddingSite {
   slug: string | null;
   password: string | null;
   isPublished: boolean;
+  templateId: WeddingTemplateId;
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
@@ -184,21 +244,44 @@ export interface WeddingSite {
   groomName: string | null;
   weddingDate: Date | null;
   heroImageUrl: string | null;
+  coupleDetailsEnabled: boolean;
+  brideFullName: string | null;
+  brideParents: string | null;
+  bridePhotoUrl: string | null;
+  groomFullName: string | null;
+  groomParents: string | null;
+  groomPhotoUrl: string | null;
+  quoteEnabled: boolean;
+  quoteText: string | null;
+  quoteSource: string | null;
   storyEnabled: boolean;
   storyTitle: string | null;
   storyText: string | null;
   storyImage1Url: string | null;
   storyImage2Url: string | null;
+  storyTimelineEnabled: boolean;
+  storyTimeline: StoryTimelineItem[];
+  dressCodeEnabled: boolean;
+  dressCodeTitle: string | null;
+  dressCodeText: string | null;
+  dressCodeColors: string[];
   galleryEnabled: boolean;
   galleryTitle: string | null;
   galleryImages: string[];
   registryEnabled: boolean;
   registryTitle: string | null;
   registryText: string | null;
+  bankAccounts: BankAccount[];
+  giftAddress: string | null;
   musicEnabled: boolean;
   musicUrl: string | null;
   musicTitle: string | null;
   musicArtist: string | null;
+  liveStreamEnabled: boolean;
+  liveStreamUrl: string | null;
+  rsvpEnabled: boolean;
+  rsvpGuestCountEnabled: boolean;
+  wishesEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
   events?: Event[];
@@ -209,10 +292,20 @@ export interface RSVP {
   fullName: string;
   email: string | null;
   attending: boolean;
+  guestCount: number | null;
   dietaryRestrictions: string | null;
   message: string | null;
   siteId: string;
   createdAt: Date;
+}
+
+export interface WeddingWish {
+  id: string;
+  fullName: string;
+  message: string;
+  isApproved: boolean;
+  createdAt: Date;
+  siteId: string;
 }
 
 // API Response Types

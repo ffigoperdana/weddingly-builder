@@ -1,12 +1,12 @@
 ---
 import '../styles/global.css';
-import { getSession } from '../lib/auth';
+import { getCurrentUser } from '../lib/auth';
 
 // Check if user is authenticated
-const session = getSession(Astro);
+const user = await getCurrentUser(Astro);
 
-if (session) {
-  return Astro.redirect('/admin');
+if (user) {
+  return Astro.redirect(user.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard');
 }
 
 return Astro.redirect('/login');

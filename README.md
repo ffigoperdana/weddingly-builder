@@ -4,11 +4,11 @@ A beautiful, simple, and efficient wedding website builder that allows couples t
 
 ## ✨ Features
 
-### For Couples (Admin Dashboard)
+### For Couples (User Dashboard)
 
 - 🎨 **Visual Builder** - Single-page builder with intuitive section-based editing
 - 🎭 **Customization** - Global color palette and font selection
-- 📸 **Media Management** - Image and audio upload via Cloudinary
+- 📸 **Media Management** - Image and audio upload via MinIO + imgproxy (self-hosted)
 - 🎵 **Background Music** - Upload custom music for guest pages
 - 🎫 **RSVP Management** - View, track, and export guest responses
 - 🔒 **Password Protection** - Optional password for guest access
@@ -34,15 +34,15 @@ A beautiful, simple, and efficient wedding website builder that allows couples t
 - **Database**: [Prisma 6.18](https://prisma.io) with PostgreSQL
 - **Animations**: [Framer Motion](https://www.framer.com/motion/) - Smooth animations
 - **Form Management**: [React Hook Form](https://react-hook-form.com) + [Zod](https://zod.dev)
-- **Media Upload**: [Cloudinary](https://cloudinary.com) - Image and audio storage
+- **Media Storage**: [MinIO](https://min.io) + [imgproxy](https://imgproxy.net) - Self-hosted S3-compatible storage with on-the-fly image processing
 - **UI Components**: [Radix UI](https://radix-ui.com) - Accessible component primitives
 - **Icons**: [Lucide React](https://lucide.dev) - Beautiful icon set
 
 ## 📋 Prerequisites
 
 - Node.js 18+ or Bun
-- PostgreSQL database
-- Cloudinary account (for image/audio uploads)
+- PostgreSQL database (local or hosted on your VPS)
+- Docker Compose (MinIO + imgproxy media stack) - deployable from Coolify or locally
 
 ## 🛠️ Installation
 
@@ -69,10 +69,20 @@ Create a `.env` file in the root directory:
 # Database
 DATABASE_URL="postgresql://user:password@localhost:5432/weddingly"
 
-# Cloudinary
-CLOUDINARY_CLOUD_NAME="your_cloud_name"
-CLOUDINARY_API_KEY="your_api_key"
-CLOUDINARY_API_SECRET="your_api_secret"
+# Session
+SESSION_SECRET="your-random-secret-key"
+
+# MinIO (S3-compatible storage)
+# Local Compose: http://localhost:9000
+# Separate Coolify app: https://media.your-domain.com
+MINIO_ENDPOINT="http://localhost:9000"
+MINIO_ACCESS_KEY="your-access-key"
+MINIO_SECRET_KEY="your-secret-key"
+MINIO_BUCKET="weddingly"
+PUBLIC_MINIO_URL="http://localhost:9000"
+
+# imgproxy (image processing)
+PUBLIC_IMGPROXY_URL="http://localhost:8080"
 ```
 
 4. **Set up the database**
@@ -91,6 +101,18 @@ npx prisma db seed
 bunx prisma db seed
 ```
 
+The configured local seed creates these development-only accounts:
+
+```text
+Super admin email: admin@owner.me
+Super admin password: OwnerAdmin123!
+
+Demo user email: demo@weddingly.local
+Demo user password: WeddinglyDemo123!
+```
+
+The seed refuses to run when `NODE_ENV=production` unless it is explicitly overridden with `ALLOW_DEMO_SEED=true`.
+
 ## 🏃 Development
 
 Start the development server:
@@ -101,7 +123,7 @@ npm run dev
 bun run dev
 ```
 
-The app will be available at `http://localhost:4321`
+The app will be available at `http://localhost:4321` (or the next available port).
 
 ## 📦 Build
 
@@ -168,7 +190,7 @@ weddingly-builder/
 │   │   └── validations.ts      # Zod schemas
 │   ├── pages/
 │   │   ├── api/                # API endpoints
-│   │   │   ├── upload.ts       # Cloudinary upload
+│   │   │   ├── upload.ts       # MinIO file upload
 │   │   │   ├── wedding/        # Wedding CRUD
 │   │   │   └── rsvp.ts         # RSVP submission
 │   │   ├── builder.astro       # Admin builder page
@@ -190,7 +212,7 @@ weddingly-builder/
 
 ### Background Music
 
-- Upload audio files (MP3, WAV, M4A, OGG) via Cloudinary
+- Upload audio files (MP3, WAV, M4A, OGG) via MinIO
 - Automatic playback on user interaction (envelope opening)
 - Floating music player with play/pause and mute controls
 - Displays song title and artist
@@ -220,14 +242,16 @@ weddingly-builder/
 
 - Password-protected wedding sites (optional)
 - Server-side validation with Zod
-- Secure file uploads via Cloudinary
+- Secure file uploads via MinIO + imgproxy (self-hosted)
 - PostgreSQL with Prisma for data safety
+- Full on-premise deployment support
 
 ## 🌐 Deployment
 
 This project can be deployed to any Node.js hosting platform:
 
-- **Vercel** (Recommended)
+- **Coolify** (Recommended for full on-premise)
+- **Vercel**
 - **Netlify**
 - **Railway**
 - **Render**
@@ -236,11 +260,16 @@ Make sure to:
 
 1. Set up environment variables
 2. Configure PostgreSQL database
-3. Run migrations before deployment
+3. Deploy the MinIO + imgproxy Compose stack from [`docker-compose.yml`](./docker-compose.yml) (see [MEDIA_STORAGE_SETUP.md](./MEDIA_STORAGE_SETUP.md))
+4. Follow [COOLIFY_DEPLOYMENT.md](./COOLIFY_DEPLOYMENT.md); the production start command runs `prisma migrate deploy` automatically
 
 ## 📖 Documentation
 
-For detailed product requirements, see [PRD.md](./docs/PRD.md)
+- [Product Requirements](./docs/PRD.md)
+- [Coolify Deployment Tutorial](./COOLIFY_DEPLOYMENT.md)
+- [Media Storage Setup Guide](./MEDIA_STORAGE_SETUP.md)
+- [Admin Setup Guide](./ADMIN_SETUP.md)
+- [Quick Start Guide](./QUICKSTART.md)
 
 ## 🤝 Contributing
 

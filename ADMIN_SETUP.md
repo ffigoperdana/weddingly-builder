@@ -3,7 +3,8 @@
 ## Prerequisites
 
 - Node.js (v18+)
-- PostgreSQL database
+- PostgreSQL database (local or hosted)
+- MinIO + imgproxy Compose stack (for media storage) - see [MEDIA_STORAGE_SETUP.md](./MEDIA_STORAGE_SETUP.md)
 - npm or yarn
 
 ## Setup Instructions
@@ -25,8 +26,9 @@ npm install
 createdb weddingly
 ```
 
-#### Option B: Use a Cloud Database (Recommended for Development)
+#### Option B: Use a Cloud Database or VPS (Recommended)
 
+- Your own VPS via Coolify (recommended for full on-premise)
 - Supabase (free tier): https://supabase.com
 - Neon (free tier): https://neon.tech
 - Railway (free tier): https://railway.app
@@ -36,13 +38,32 @@ createdb weddingly
 Create a `.env` file in the root directory:
 
 ```env
+# Database
 DATABASE_URL="postgresql://username:password@localhost:5432/weddingly?schema=public"
+
+# Session
 SESSION_SECRET="your-random-secret-key-here"
+
+# MinIO (Media Storage)
+# Local Compose: http://localhost:9000
+# Separate Coolify app: https://media.your-domain.com
+MINIO_ENDPOINT="http://localhost:9000"
+MINIO_ACCESS_KEY="your-access-key"
+MINIO_SECRET_KEY="your-secret-key"
+MINIO_BUCKET="weddingly"
+PUBLIC_MINIO_URL="http://localhost:9000"
+
+# imgproxy (Image Processing)
+PUBLIC_IMGPROXY_URL="http://localhost:8080"
 ```
 
-Replace with your actual database credentials.
+Replace with your actual credentials.
 
-### 4. Generate Prisma Client and Run Migrations
+### 4. Set Up Media Storage (MinIO + imgproxy)
+
+Follow the [MEDIA_STORAGE_SETUP.md](./MEDIA_STORAGE_SETUP.md) guide to deploy the MinIO + imgproxy Compose stack from GitHub in Coolify.
+
+### 5. Generate Prisma Client and Run Migrations
 
 ```bash
 # Generate Prisma Client
@@ -85,14 +106,16 @@ The admin interface includes two main views:
 
 ### Authentication
 
-- ✅ Login and registration system
-- ✅ Session-based authentication
-- ✅ Protected admin routes
+- ✅ Login with signed, expiring sessions
+- ✅ `USER` and `SUPER_ADMIN` roles
+- ✅ Public registration disabled
+- ✅ Super admin creates and manages user accounts
+- ✅ Protected user and super admin routes
 
 ### API Endpoints
 
 - `/api/auth/login` - User login
-- `/api/auth/register` - User registration
+- `/api/auth/register` - Disabled; accounts are created by a super admin
 - `/api/auth/logout` - User logout
 - `/api/wedding/site` - Get/Update wedding site data
 - `/api/rsvp/list` - Get all RSVPs
@@ -113,13 +136,15 @@ The admin interface includes two main views:
 
 1. Navigate to `http://localhost:4321`
 2. You'll be redirected to `/login`
-3. Click "Sign up" to create an account
-4. Fill in the builder form with your wedding details
-5. Click "Publish Website" to make it live
+3. Run the local seed or ask a super admin to create an account
+4. Login and open the user dashboard at `/dashboard`
+5. Fill in the builder form with your wedding details
+6. Click "Publish Website" to make it live
 
 ### Managing Your Site
 
-- Access the admin dashboard at `/admin`
+- User accounts access the builder at `/dashboard`
+- Super admins access management at `/admin`
 - Switch between "Builder" and "RSVP List" tabs
 - Make changes and click "Save Draft" or "Publish Website"
 

@@ -13,14 +13,33 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  USER
+  SUPER_ADMIN
+}
+
 model User {
   id        String   @id @default(cuid())
   email     String   @unique
   password  String
+  role      UserRole @default(USER)
+  isActive  Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
   weddingSite WeddingSite?
+}
+
+model WeddingTemplate {
+  id          String   @id
+  name        String
+  description String
+  rendererId  String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([isActive])
 }
 
 model WeddingSite {
@@ -32,6 +51,7 @@ model WeddingSite {
   slug      String   @unique
   isPublished Boolean @default(false)
   password  String?
+  templateId String  @default("classic")
   
   // Global Styles
   primaryColor   String @default("#e4b6c6")
@@ -46,6 +66,20 @@ model WeddingSite {
   groomName        String?
   weddingDate      DateTime?
   heroImageUrl     String?
+
+  // Optional Couple Details Section
+  coupleDetailsEnabled Boolean @default(false)
+  brideFullName        String?
+  brideParents         String?
+  bridePhotoUrl        String?
+  groomFullName        String?
+  groomParents         String?
+  groomPhotoUrl        String?
+
+  // Optional Quote Section
+  quoteEnabled Boolean @default(false)
+  quoteText    String?
+  quoteSource  String?
   
   // Our Story Section
   storyEnabled     Boolean @default(true)
@@ -53,6 +87,16 @@ model WeddingSite {
   storyText        String?
   storyImage1Url   String?
   storyImage2Url   String?
+
+  // Optional Story Timeline Section
+  storyTimelineEnabled Boolean @default(false)
+  storyTimeline        Json    @default("[]")
+
+  // Optional Dress Code Section
+  dressCodeEnabled Boolean  @default(false)
+  dressCodeTitle   String   @default("Dress Code")
+  dressCodeText    String?
+  dressCodeColors  String[] @default([])
   
   // Photo Gallery Section
   galleryEnabled   Boolean @default(false)
@@ -63,18 +107,30 @@ model WeddingSite {
   registryEnabled  Boolean @default(true)
   registryTitle    String  @default("Gift Registry")
   registryText     String?
+  bankAccounts     Json    @default("[]")
+  giftAddress      String?
   
   // Music Section
   musicEnabled     Boolean @default(true)
   musicUrl         String?
   musicTitle       String?
   musicArtist      String?
+
+  // Optional Live Streaming Section
+  liveStreamEnabled Boolean @default(false)
+  liveStreamUrl     String?
+
+  // RSVP and Wishes
+  rsvpEnabled           Boolean @default(true)
+  rsvpGuestCountEnabled Boolean @default(false)
+  wishesEnabled         Boolean @default(false)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
   events Event[]
   rsvps  RSVP[]
+  wishes WeddingWish[]
 }
 
 model Event {
@@ -103,10 +159,24 @@ model RSVP {
   fullName  String
   email     String?
   attending Boolean
+  guestCount Int?
   dietaryRestrictions String?
   message   String?
   
   createdAt DateTime @default(now())
   
+  @@index([siteId])
+}
+
+model WeddingWish {
+  id        String      @id @default(cuid())
+  siteId    String
+  site      WeddingSite @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  fullName   String
+  message    String
+  isApproved Boolean  @default(true)
+  createdAt  DateTime @default(now())
+
   @@index([siteId])
 }

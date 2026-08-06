@@ -15,6 +15,11 @@ const rsvpSchema = z.object({
     .optional()
     .or(z.literal('')),
   attending: z.enum(['yes', 'no']),
+  guestCount: z.preprocess(
+    (value) =>
+      value === '' || value === undefined ? undefined : Number(value),
+    z.number().int().min(1).max(20).optional(),
+  ),
   dietaryRestrictions: z.string().optional(),
   message: z.string().optional(),
 });
@@ -26,6 +31,8 @@ interface RSVPFormProps {
   primaryColor?: string;
   accentColor?: string;
   guestName?: string;
+  locale?: 'en' | 'id';
+  guestCountEnabled?: boolean;
 }
 
 export function RSVPForm({
@@ -33,9 +40,55 @@ export function RSVPForm({
   primaryColor = '#e4b6c6',
   accentColor = '#9b7e7e',
   guestName,
+  locale = 'en',
+  guestCountEnabled = false,
 }: RSVPFormProps) {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const copy =
+    locale === 'id'
+      ? {
+          thankYou: 'Terima Kasih!',
+          submitted:
+            'Konfirmasi kehadiran Anda sudah kami terima. Sampai jumpa di hari bahagia kami!',
+          fullName: 'Nama lengkap',
+          fullNamePlaceholder: 'Masukkan nama lengkap',
+          email: 'Email (opsional)',
+          attending: 'Apakah Anda akan hadir?',
+          attendingYes: 'Ya, saya akan hadir',
+          attendingNo: 'Maaf, belum bisa hadir',
+          guestCount: 'Jumlah tamu (opsional)',
+          guestCountPlaceholder: 'Pilih jumlah tamu',
+          dietary: 'Kebutuhan makanan (opsional)',
+          dietaryPlaceholder: 'Alergi atau kebutuhan makanan',
+          message: 'Pesan untuk mempelai (opsional)',
+          messagePlaceholder: 'Tuliskan doa dan ucapan terbaik...',
+          submit: 'Kirim Konfirmasi',
+          submitting: 'Mengirim...',
+          success: 'RSVP berhasil dikirim!',
+          failed: 'Gagal mengirim RSVP',
+        }
+      : {
+          thankYou: 'Thank You!',
+          submitted:
+            "We've received your RSVP. We can't wait to celebrate with you!",
+          fullName: 'Full Name',
+          fullNamePlaceholder: 'Your full name',
+          email: 'Email (Optional)',
+          attending: 'Will you be attending?',
+          attendingYes: "Yes, I'll be there!",
+          attendingNo: "Sorry, can't make it",
+          guestCount: 'Number of guests (Optional)',
+          guestCountPlaceholder: 'Select guest count',
+          dietary: 'Dietary Restrictions (Optional)',
+          dietaryPlaceholder: 'Any allergies or dietary needs?',
+          message: 'Message for the Couple (Optional)',
+          messagePlaceholder: 'Share your warm wishes...',
+          submit: 'Submit RSVP',
+          submitting: 'Submitting...',
+          success: 'RSVP submitted successfully!',
+          failed: 'Failed to submit RSVP',
+        };
 
   const {
     register,
@@ -67,16 +120,16 @@ export function RSVPForm({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to submit RSVP');
+        throw new Error(errorData.error || copy.failed);
       }
 
       setSubmitted(true);
-      toast.success('RSVP submitted successfully!');
+      toast.success(copy.success);
     } catch (error) {
       const message =
         error instanceof Error
           ? error.message
-          : 'Failed to submit RSVP';
+          : copy.failed;
       toast.error(message);
     } finally {
       setIsSubmitting(false);
@@ -93,22 +146,19 @@ export function RSVPForm({
         }}
       >
         <div className="max-w-md mx-auto">
-          <div
-            className="text-6xl mb-4"
-            style={{ color: accentColor }}
+        <div
+          className="text-6xl mb-4"
+          style={{ color: accentColor }}
           >
             ✓
           </div>
           <h3
-            className="text-2xl font-bold mb-2"
-            style={{ color: accentColor }}
-          >
-            Thank You!
-          </h3>
-          <p className="text-gray-600">
-            We've received your RSVP. We can't wait to celebrate with
-            you!
-          </p>
+          className="text-2xl font-bold mb-2"
+          style={{ color: accentColor }}
+        >
+          {copy.thankYou}
+        </h3>
+        <p className="text-gray-600">{copy.submitted}</p>
         </div>
       </div>
     );
@@ -119,11 +169,11 @@ export function RSVPForm({
       {/* Full Name */}
       <div>
         <label className="block text-sm font-medium mb-2">
-          Full Name <span className="text-red-500">*</span>
+          {copy.fullName} <span className="text-red-500">*</span>
         </label>
         <Input
           {...register('fullName')}
-          placeholder="Your full name"
+          placeholder={copy.fullNamePlaceholder}
           className="w-full"
         />
         {errors.fullName && (
@@ -136,7 +186,7 @@ export function RSVPForm({
       {/* Email */}
       <div>
         <label className="block text-sm font-medium mb-2">
-          Email (Optional)
+          {copy.email}
         </label>
         <Input
           {...register('email')}
@@ -154,7 +204,7 @@ export function RSVPForm({
       {/* Attending */}
       <div>
         <label className="block text-sm font-medium mb-3">
-          Will you be attending?{' '}
+          {copy.attending}{' '}
           <span className="text-red-500">*</span>
         </label>
         <div className="flex gap-4">
@@ -166,7 +216,7 @@ export function RSVPForm({
               className="mr-2 h-4 w-4"
               style={{ accentColor }}
             />
-            <span className="text-sm">Yes, I'll be there!</span>
+            <span className="text-sm">{copy.attendingYes}</span>
           </label>
           <label className="flex items-center flex-1">
             <input
@@ -176,7 +226,7 @@ export function RSVPForm({
               className="mr-2 h-4 w-4"
               style={{ accentColor }}
             />
-            <span className="text-sm">Sorry, can't make it</span>
+            <span className="text-sm">{copy.attendingNo}</span>
           </label>
         </div>
         {errors.attending && (
@@ -186,15 +236,41 @@ export function RSVPForm({
         )}
       </div>
 
+      {guestCountEnabled && (
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            {copy.guestCount}
+          </label>
+          <select
+            {...register('guestCount')}
+            className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            defaultValue=""
+          >
+            <option value="">{copy.guestCountPlaceholder}</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6+</option>
+          </select>
+          {errors.guestCount && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.guestCount.message}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Dietary Restrictions - only show if attending */}
       {attending === 'yes' && (
         <div>
           <label className="block text-sm font-medium mb-2">
-            Dietary Restrictions (Optional)
+            {copy.dietary}
           </label>
           <Input
             {...register('dietaryRestrictions')}
-            placeholder="Any allergies or dietary needs?"
+            placeholder={copy.dietaryPlaceholder}
             className="w-full"
           />
         </div>
@@ -203,11 +279,11 @@ export function RSVPForm({
       {/* Message */}
       <div>
         <label className="block text-sm font-medium mb-2">
-          Message for the Couple (Optional)
+          {copy.message}
         </label>
         <Textarea
           {...register('message')}
-          placeholder="Share your warm wishes..."
+          placeholder={copy.messagePlaceholder}
           className="w-full min-h-[100px]"
         />
       </div>
@@ -221,7 +297,7 @@ export function RSVPForm({
           backgroundColor: accentColor,
         }}
       >
-        {isSubmitting ? 'Submitting...' : 'Submit RSVP'}
+        {isSubmitting ? copy.submitting : copy.submit}
       </Button>
     </form>
   );

@@ -1,14 +1,18 @@
 ---
 import '../styles/global.css';
-import AdminDashboard from '../components/AdminDashboard';
+import SuperAdminDashboard from '../components/SuperAdminDashboard';
 import { Toaster } from '../components/ui/sonner';
-import { getSession } from '../lib/auth';
+import { getCurrentUser } from '../lib/auth';
 
 // Check if user is authenticated
-const session = getSession(Astro);
+const user = await getCurrentUser(Astro);
 
-if (!session) {
+if (!user) {
   return Astro.redirect('/login');
+}
+
+if (user.role !== 'SUPER_ADMIN') {
+  return Astro.redirect('/dashboard');
 }
 ---
 
@@ -17,11 +21,11 @@ if (!session) {
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Admin Dashboard - Wedding Builder</title>
+    <title>Super Admin - Wedding Builder</title>
   </head>
 
   <body>
-    <AdminDashboard client:load />
+    <SuperAdminDashboard client:load />
     <Toaster client:only="react" />
   </body>
 </html>

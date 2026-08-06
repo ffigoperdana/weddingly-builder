@@ -27,7 +27,7 @@ export const POST: APIRoute = async ({ request, cookies }) => {
       );
     }
 
-    const sessionToken = await createSession(user.userId, user.email);
+    const sessionToken = await createSession(user.userId);
 
     cookies.set('session', sessionToken, {
       path: '/',

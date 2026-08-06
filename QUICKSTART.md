@@ -63,10 +63,28 @@ Choose one of these options:
    cp .env.example .env
    ```
 
-2. **Edit `.env`** and update the DATABASE_URL:
+2. **Edit `.env`** and update the following:
    ```env
+   # Database
    DATABASE_URL="postgresql://username:password@host:5432/database"
+
+   # Session
+   SESSION_SECRET="your-random-secret-key"
+
+   # MinIO (Media Storage)
+   # Local Compose: http://localhost:9000
+   # Separate Coolify app: https://media.your-domain.com
+   MINIO_ENDPOINT="http://localhost:9000"
+   MINIO_ACCESS_KEY="your-access-key"
+   MINIO_SECRET_KEY="your-secret-key"
+   MINIO_BUCKET="weddingly"
+   PUBLIC_MINIO_URL="http://localhost:9000"
+
+   # imgproxy (Image Processing)
+   PUBLIC_IMGPROXY_URL="http://localhost:8080"
    ```
+
+> **Note**: Start the media stack with `docker compose --env-file .env -f docker-compose.yml -f docker-compose.local.yml up -d`. For Coolify deployment, see [MEDIA_STORAGE_SETUP.md](./MEDIA_STORAGE_SETUP.md).
 
 ### Step 3: Install and Setup
 
@@ -87,8 +105,8 @@ npm run dev
 ### Step 4: Access the App
 
 1. Open your browser to `http://localhost:4321`
-2. Click "Sign up" to create your account
-3. Start building your wedding website!
+2. Login with an account created by the super admin
+3. Open `/dashboard` and start building your wedding website!
 
 ## 🎯 What You'll See
 
@@ -96,7 +114,8 @@ npm run dev
 
 - **Landing page** → Redirects to login
 - **Login page** → Create account or login
-- **Admin dashboard** → Builder form (empty)
+- **User dashboard** → Builder form (empty)
+- **Super admin dashboard** → Users, invitations, and template usage
 
 ### After Setup
 
@@ -112,8 +131,8 @@ npm run dev
 - [ ] Migrations applied (`npx prisma migrate dev`)
 - [ ] Server is running (`npm run dev`)
 - [ ] Can access `http://localhost:4321`
-- [ ] Can register a new account
-- [ ] Can see the admin dashboard
+- [ ] A super admin has created a user account
+- [ ] Can see the user dashboard
 
 ## 🐛 Troubleshooting
 
@@ -179,7 +198,7 @@ npx prisma migrate reset
 
 After setup, verify everything works:
 
-1. **Register**: Create a new account
+1. **Create account**: A super admin creates the user account
 2. **Login**: Sign in with your credentials
 3. **Builder**: Fill in at least:
    - Couple names

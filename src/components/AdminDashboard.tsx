@@ -5,6 +5,7 @@ import RSVPList from './RSVPList';
 import { Button } from './ui/button';
 import { LogOut } from 'lucide-react';
 import type { WeddingSite } from '../lib/validations';
+import { getWeddingTemplate } from '../lib/templates';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'builder' | 'rsvps'>(
@@ -64,11 +65,16 @@ export default function AdminDashboard() {
           <div className="flex justify-between items-center h-16">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">
-                Wedding Admin
+                Wedding Builder
               </h1>
               {weddingSite?.slug && (
                 <p className="text-sm text-gray-500">
-                  theevermore.com/{weddingSite.slug}
+                  invitation.fgdev.tech/{weddingSite.slug}
+                </p>
+              )}
+              {weddingSite && (
+                <p className="text-xs text-gray-400">
+                  Template: {getWeddingTemplate(weddingSite.templateId).name}
                 </p>
               )}
             </div>

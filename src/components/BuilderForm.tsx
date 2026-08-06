@@ -18,6 +18,8 @@ import { StorySection } from './sections/StorySection';
 import { GallerySection } from './sections/GallerySection';
 import { RegistrySection } from './sections/RegistrySection';
 import { MusicSection } from './sections/MusicSection';
+import { TemplatePickerSection } from './sections/TemplatePickerSection';
+import { OptionalSectionsSection } from './sections/OptionalSectionsSection';
 
 interface BuilderFormProps {
   initialData?: WeddingSite;
@@ -34,6 +36,9 @@ export default function BuilderForm({
   const form = useForm<WeddingSiteFormData>({
     resolver: zodResolver(weddingSiteSchema),
     defaultValues: {
+      // Template
+      templateId: initialData?.templateId || 'classic',
+
       // Global Styles
       primaryColor: initialData?.primaryColor || '#e4b6c6',
       secondaryColor: initialData?.secondaryColor || '#d4a5a5',
@@ -50,12 +55,35 @@ export default function BuilderForm({
         : null,
       heroImageUrl: initialData?.heroImageUrl || '',
 
+      // Optional Couple Details Section
+      coupleDetailsEnabled: initialData?.coupleDetailsEnabled ?? false,
+      brideFullName: initialData?.brideFullName || '',
+      brideParents: initialData?.brideParents || '',
+      bridePhotoUrl: initialData?.bridePhotoUrl || '',
+      groomFullName: initialData?.groomFullName || '',
+      groomParents: initialData?.groomParents || '',
+      groomPhotoUrl: initialData?.groomPhotoUrl || '',
+
+      // Optional Quote Section
+      quoteEnabled: initialData?.quoteEnabled ?? false,
+      quoteText: initialData?.quoteText || '',
+      quoteSource: initialData?.quoteSource || '',
+
       // Story Section
       storyEnabled: initialData?.storyEnabled ?? true,
       storyTitle: initialData?.storyTitle || 'Our Story',
       storyText: initialData?.storyText || '',
       storyImage1Url: initialData?.storyImage1Url || '',
       storyImage2Url: initialData?.storyImage2Url || '',
+      storyTimelineEnabled:
+        initialData?.storyTimelineEnabled ?? false,
+      storyTimeline: initialData?.storyTimeline || [],
+
+      // Optional Dress Code
+      dressCodeEnabled: initialData?.dressCodeEnabled ?? false,
+      dressCodeTitle: initialData?.dressCodeTitle || 'Dress Code',
+      dressCodeText: initialData?.dressCodeText || '',
+      dressCodeColors: initialData?.dressCodeColors || [],
 
       // Gallery Section
       galleryEnabled: initialData?.galleryEnabled ?? false,
@@ -66,12 +94,24 @@ export default function BuilderForm({
       registryEnabled: initialData?.registryEnabled ?? true,
       registryTitle: initialData?.registryTitle || 'Gift Registry',
       registryText: initialData?.registryText || '',
+      bankAccounts: initialData?.bankAccounts || [],
+      giftAddress: initialData?.giftAddress || '',
 
       // Music Section
       musicEnabled: initialData?.musicEnabled ?? true,
       musicUrl: initialData?.musicUrl || '',
       musicTitle: initialData?.musicTitle || '',
       musicArtist: initialData?.musicArtist || '',
+
+      // Optional Live Streaming
+      liveStreamEnabled: initialData?.liveStreamEnabled ?? false,
+      liveStreamUrl: initialData?.liveStreamUrl || '',
+
+      // RSVP and Wishes
+      rsvpEnabled: initialData?.rsvpEnabled ?? true,
+      rsvpGuestCountEnabled:
+        initialData?.rsvpGuestCountEnabled ?? false,
+      wishesEnabled: initialData?.wishesEnabled ?? false,
 
       // Publishing
       slug: initialData?.slug || '',
@@ -100,10 +140,21 @@ export default function BuilderForm({
     name: 'events',
   });
 
+  const storyTimelineArray = useFieldArray({
+    control,
+    name: 'storyTimeline',
+  });
+
+  const bankAccountsArray = useFieldArray({
+    control,
+    name: 'bankAccounts',
+  });
+
   // Update form when initialData changes
   useEffect(() => {
     if (initialData) {
       form.reset({
+        templateId: initialData.templateId || 'classic',
         primaryColor: initialData.primaryColor || '#e4b6c6',
         secondaryColor: initialData.secondaryColor || '#d4a5a5',
         accentColor: initialData.accentColor || '#9b7e7e',
@@ -116,21 +167,49 @@ export default function BuilderForm({
           ? new Date(initialData.weddingDate)
           : null,
         heroImageUrl: initialData.heroImageUrl || '',
+        coupleDetailsEnabled:
+          initialData.coupleDetailsEnabled ?? false,
+        brideFullName: initialData.brideFullName || '',
+        brideParents: initialData.brideParents || '',
+        bridePhotoUrl: initialData.bridePhotoUrl || '',
+        groomFullName: initialData.groomFullName || '',
+        groomParents: initialData.groomParents || '',
+        groomPhotoUrl: initialData.groomPhotoUrl || '',
+        quoteEnabled: initialData.quoteEnabled ?? false,
+        quoteText: initialData.quoteText || '',
+        quoteSource: initialData.quoteSource || '',
         storyEnabled: initialData.storyEnabled ?? true,
         storyTitle: initialData.storyTitle || 'Our Story',
         storyText: initialData.storyText || '',
         storyImage1Url: initialData.storyImage1Url || '',
         storyImage2Url: initialData.storyImage2Url || '',
+        storyTimelineEnabled:
+          initialData.storyTimelineEnabled ?? false,
+        storyTimeline: initialData.storyTimeline || [],
+        dressCodeEnabled: initialData.dressCodeEnabled ?? false,
+        dressCodeTitle:
+          initialData.dressCodeTitle || 'Dress Code',
+        dressCodeText: initialData.dressCodeText || '',
+        dressCodeColors: initialData.dressCodeColors || [],
         galleryEnabled: initialData.galleryEnabled ?? false,
         galleryTitle: initialData.galleryTitle || 'Our Gallery',
         galleryImages: initialData.galleryImages || [],
         registryEnabled: initialData.registryEnabled ?? true,
         registryTitle: initialData.registryTitle || 'Gift Registry',
         registryText: initialData.registryText || '',
+        bankAccounts: initialData.bankAccounts || [],
+        giftAddress: initialData.giftAddress || '',
         musicEnabled: initialData.musicEnabled ?? true,
         musicUrl: initialData.musicUrl || '',
         musicTitle: initialData.musicTitle || '',
         musicArtist: initialData.musicArtist || '',
+        liveStreamEnabled:
+          initialData.liveStreamEnabled ?? false,
+        liveStreamUrl: initialData.liveStreamUrl || '',
+        rsvpEnabled: initialData.rsvpEnabled ?? true,
+        rsvpGuestCountEnabled:
+          initialData.rsvpGuestCountEnabled ?? false,
+        wishesEnabled: initialData.wishesEnabled ?? false,
         slug: initialData.slug || '',
         password: initialData.password || '',
         events:
@@ -240,6 +319,8 @@ export default function BuilderForm({
         </div>
       )}
 
+      <TemplatePickerSection control={control} />
+
       <GlobalStylesSection
         register={register}
         errors={errors}
@@ -279,12 +360,22 @@ export default function BuilderForm({
         errors={errors}
         control={control}
         watch={watch}
+        bankAccountsArray={bankAccountsArray}
       />
 
       <MusicSection
         register={register}
         watch={watch}
         setValue={setValue}
+      />
+
+      <OptionalSectionsSection
+        register={register}
+        errors={errors}
+        control={control}
+        watch={watch}
+        storyTimelineArray={storyTimelineArray}
+        bankAccountsArray={bankAccountsArray}
       />
 
       <PublishingSection

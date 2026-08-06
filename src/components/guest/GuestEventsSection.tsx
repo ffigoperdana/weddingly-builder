@@ -37,6 +37,21 @@ export function GuestEventsSection({
     });
   };
 
+  const getMapEmbedUrl = (event: Event) => {
+    if (
+      /^https?:\/\//i.test(event.address) &&
+      (/embed/i.test(event.address) || /output=embed/i.test(event.address))
+    ) {
+      return event.address;
+    }
+
+    return (
+      'https://www.google.com/maps?q=' +
+      encodeURIComponent(event.location + ' ' + event.address) +
+      '&output=embed'
+    );
+  };
+
   return (
     <section
       className="py-16 px-4 sm:py-16"
@@ -124,7 +139,7 @@ export function GuestEventsSection({
               {/* Embedded Map */}
               <AspectRatio ratio={16 / 9}>
                 <iframe
-                  src={event.address}
+                  src={getMapEmbedUrl(event)}
                   className="w-full h-full"
                   style={{ border: 0 }}
                   allowFullScreen

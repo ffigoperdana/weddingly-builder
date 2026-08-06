@@ -1,0 +1,80 @@
+services:
+  minio:
+    # Coolify routes public traffic to these container ports through service domains.
+    image: quay.io/minio/minio:latest
+    command: server /data --console-address ":9001"
+    restart: unless-stopped
+    environment:
+      # Reuse the same credentials that Weddingly uses for its S3 client.
+      MINIO_ROOT_USER: "${MINIO_ACCESS_KEY:?Set MINIO_ACCESS_KEY in Coolify}"
+      MINIO_ROOT_PASSWORD: "${MINIO_SECRET_KEY:?Set MINIO_SECRET_KEY in Coolify}"
+      # Set these in Coolify when the console/API are behind public domains.
+      MINIO_SERVER_URL: "${MINIO_SERVER_URL:-}"
+      MINIO_BROWSER_REDIRECT_URL: "${MINIO_BROWSER_REDIRECT_URL:-}"
+    expose:
+      - "9000"
+      - "9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  # Creates the application bucket and enables read-only public downloads.
+  # Weddingly currently serves audio files directly from MinIO, so this step
+  # is intentionally part of the stack instead of a manual console action.
+  minio-init:
+    image: minio/mc:latest
+    restart: "no"
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ACCESS_KEY: "${MINIO_ACCESS_KEY:?Set MINIO_ACCESS_KEY in Coolify}"
+      MINIO_SECRET_KEY: "${MINIO_SECRET_KEY:?Set MINIO_SECRET_KEY in Coolify}"
+      MINIO_BUCKET: "${MINIO_BUCKET:-weddingly}"
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        mc alias set local http://minio:9000 "$${MINIO_ACCESS_KEY}" "$${MINIO_SECRET_KEY}" &&
+        mc mb --ignore-existing "local/$${MINIO_BUCKET}" &&
+        mc anonymous set download "local/$${MINIO_BUCKET}"
+
+  imgproxy:
+    image: ghcr.io/imgproxy/imgproxy:latest
+    restart: unless-stopped
+    depends_on:
+      minio-init:
+        condition: service_completed_successfully
+    environment:
+      IMGPROXY_BIND: ":8080"
+      IMGPROXY_LOG_LEVEL: "${IMGPROXY_LOG_LEVEL:-info}"
+      IMGPROXY_USE_S3: "true"
+      IMGPROXY_S3_ENDPOINT: "http://minio:9000"
+      IMGPROXY_S3_REGION: "${AWS_REGION:-us-east-1}"
+      IMGPROXY_S3_ENDPOINT_USE_PATH_STYLE: "true"
+      IMGPROXY_S3_ALLOWED_BUCKETS: "${MINIO_BUCKET:-weddingly}"
+      AWS_ACCESS_KEY_ID: "${MINIO_ACCESS_KEY:?Set MINIO_ACCESS_KEY in Coolify}"
+      AWS_SECRET_ACCESS_KEY: "${MINIO_SECRET_KEY:?Set MINIO_SECRET_KEY in Coolify}"
+      AWS_REGION: "${AWS_REGION:-us-east-1}"
+      IMGPROXY_CONCURRENCY: "${IMGPROXY_CONCURRENCY:-10}"
+      IMGPROXY_MAX_SRC_RESOLUTION: "${IMGPROXY_MAX_SRC_RESOLUTION:-50}"
+      IMGPROXY_MAX_SRC_FILE_SIZE: "${IMGPROXY_MAX_SRC_FILE_SIZE:-10485760}"
+      IMGPROXY_PREFERRED_FORMATS: "${IMGPROXY_PREFERRED_FORMATS:-webp,avif,jpeg}"
+      # Leave empty for local development; set both in production to sign URLs.
+      IMGPROXY_KEY: "${IMGPROXY_KEY:-}"
+      IMGPROXY_SALT: "${IMGPROXY_SALT:-}"
+    expose:
+      - "8080"
+    healthcheck:
+      test: ["CMD", "imgproxy", "health"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 10s
+
+volumes:
+  minio_data:

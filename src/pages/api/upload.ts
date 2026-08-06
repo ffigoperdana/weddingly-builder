@@ -1,12 +1,27 @@
 import type { APIRoute } from 'astro';
 import { requireAuth } from '../../lib/auth';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
+import {
+  generateObjectKey,
+  getPublicUrl,
+  getImgproxyUrl,
+} from '../../lib/media-storage';
 
-interface CloudinaryUploadResponse {
-  secure_url: string;
-  public_id: string;
-  width: number;
-  height: number;
-  format: string;
+// Initialize S3 client for MinIO
+function getS3Client(): S3Client {
+  const endpoint = import.meta.env.MINIO_ENDPOINT;
+  const accessKey = import.meta.env.MINIO_ACCESS_KEY;
+  const secretKey = import.meta.env.MINIO_SECRET_KEY;
+
+  return new S3Client({
+    endpoint,
+    region: 'us-east-1', // MinIO doesn't care about region, but SDK requires it
+    credentials: {
+      accessKeyId: accessKey,
+      secretAccessKey: secretKey,
+    },
+    forcePathStyle: true, // Required for MinIO
+  });
 }
 
 export const POST: APIRoute = async (context) => {
@@ -30,7 +45,7 @@ export const POST: APIRoute = async (context) => {
     const isImage = file.type.startsWith('image/');
     const isAudio =
       file.type.startsWith('audio/') ||
-      file.name.match(/\.(mp3|wav|m4a|ogg)$/i);
+      !!file.name.match(/\.(mp3|wav|m4a|ogg)$/i);
 
     if (!isImage && !isAudio) {
       return new Response(
@@ -56,40 +71,16 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
-    // Convert file to base64
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-    const base64 = buffer.toString('base64');
-    const dataUri = `data:${file.type};base64,${base64}`;
+    // Check MinIO configuration
+    const endpoint = import.meta.env.MINIO_ENDPOINT;
+    const accessKey = import.meta.env.MINIO_ACCESS_KEY;
+    const secretKey = import.meta.env.MINIO_SECRET_KEY;
+    const bucket = import.meta.env.MINIO_BUCKET || 'weddingly';
 
-    // Upload to Cloudinary
-    const resourceType = isAudio ? 'video' : 'image'; // Cloudinary uses 'video' for audio
-    const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${
-      import.meta.env.PUBLIC_CLOUDINARY_CLOUD_NAME
-    }/${resourceType}/upload`;
-
-    const cloudinaryFormData = new FormData();
-    cloudinaryFormData.append('file', dataUri);
-    cloudinaryFormData.append('upload_preset', 'weddingly'); // We'll need to create this preset
-    cloudinaryFormData.append('folder', 'weddingly-builder');
-
-    if (isAudio) {
-      cloudinaryFormData.append('resource_type', 'video'); // Required for audio files
-    }
-
-    const uploadResponse = await fetch(cloudinaryUrl, {
-      method: 'POST',
-      body: cloudinaryFormData,
-    });
-
-    if (!uploadResponse.ok) {
-      const error = await uploadResponse.text();
-      console.error('Cloudinary upload error:', error);
+    if (!endpoint || !accessKey || !secretKey) {
       return new Response(
         JSON.stringify({
-          error: `Failed to upload ${
-            isAudio ? 'audio' : 'image'
-          } to Cloudinary`,
+          error: 'Storage configuration missing. Check MINIO_* environment variables.',
         }),
         {
           status: 500,
@@ -98,17 +89,55 @@ export const POST: APIRoute = async (context) => {
       );
     }
 
-    const result =
-      (await uploadResponse.json()) as CloudinaryUploadResponse;
+    // Generate unique object key
+    const objectKey = generateObjectKey(file.name);
+
+    // Convert file to buffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Upload to MinIO
+    const s3Client = getS3Client();
+
+    try {
+      await s3Client.send(
+        new PutObjectCommand({
+          Bucket: bucket,
+          Key: objectKey,
+          Body: buffer,
+          ContentType: file.type,
+        }),
+      );
+    } catch (uploadError) {
+      console.error('MinIO upload error:', uploadError);
+      return new Response(
+        JSON.stringify({
+          error: `Failed to upload ${isAudio ? 'audio' : 'image'} to storage`,
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        },
+      );
+    }
+
+    // Generate the URL for accessing the uploaded file
+    // For images, use imgproxy URL for processing
+    // For audio, use direct MinIO URL
+    const fileUrl = isImage
+      ? getImgproxyUrl(objectKey, { quality: 85 })
+      : getPublicUrl(objectKey);
 
     return new Response(
       JSON.stringify({
         success: true,
-        url: result.secure_url,
-        publicId: result.public_id,
-        width: result.width,
-        height: result.height,
-        format: result.format,
+        url: fileUrl,
+        objectKey: objectKey,
+        bucket: bucket,
+        contentType: file.type,
+        // Include legacy fields for backward compatibility
+        publicId: objectKey,
+        format: file.type.split('/')[1] || 'unknown',
       }),
       {
         status: 200,

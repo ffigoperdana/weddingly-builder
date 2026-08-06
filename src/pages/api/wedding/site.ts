@@ -1,6 +1,7 @@
 import type { APIRoute } from 'astro';
 import { requireAuth } from '../../../lib/auth';
 import prisma from '../../../lib/prisma';
+import { isWeddingTemplateId } from '../../../lib/templates';
 
 interface EventData {
   title: string;
@@ -47,7 +48,15 @@ export const POST: APIRoute = async (context) => {
       where: { userId: session.userId },
     });
 
-    const { events, ...siteData } = data;
+    const { events, templateId, ...siteData } = data;
+    const requestedTemplate = isWeddingTemplateId(templateId)
+      ? templateId
+      : 'classic';
+    const activeTemplate = await prisma.weddingTemplate.findFirst({
+      where: { id: requestedTemplate, isActive: true },
+      select: { id: true },
+    });
+    const selectedTemplate = activeTemplate?.id ?? 'classic';
 
     let weddingSite: Awaited<
       ReturnType<typeof prisma.weddingSite.create>
@@ -59,6 +68,7 @@ export const POST: APIRoute = async (context) => {
         where: { userId: session.userId },
         data: {
           ...siteData,
+          templateId: selectedTemplate,
           weddingDate: siteData.weddingDate
             ? new Date(siteData.weddingDate)
             : null,
@@ -110,6 +120,7 @@ export const POST: APIRoute = async (context) => {
           userId: session.userId,
           slug: siteData.slug || `wedding-${Date.now()}`,
           ...siteData,
+          templateId: selectedTemplate,
           weddingDate: siteData.weddingDate
             ? new Date(siteData.weddingDate)
             : null,

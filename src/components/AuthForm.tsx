@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
@@ -11,12 +10,7 @@ import {
   CardTitle,
 } from './ui/card';
 import { FormField } from './FormField';
-import {
-  loginSchema,
-  registerSchema,
-  type LoginFormData,
-  type RegisterFormData,
-} from '../lib/validations';
+import { loginSchema, type LoginFormData } from '../lib/validations';
 import { authService } from '../lib/api';
 
 interface AuthFormProps {
@@ -24,9 +18,7 @@ interface AuthFormProps {
 }
 
 export default function AuthForm({ onSuccess }: AuthFormProps) {
-  const [isLogin, setIsLogin] = useState(true);
-
-  const loginForm = useForm<LoginFormData>({
+  const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
@@ -34,37 +26,20 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
     },
   });
 
-  const registerForm = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
-
-  const currentForm = isLogin ? loginForm : registerForm;
   const {
     handleSubmit,
     register,
     formState: { errors, isSubmitting },
-  } = currentForm;
+  } = form;
 
-  const onSubmit = async (data: LoginFormData | RegisterFormData) => {
+  const onSubmit = async (data: LoginFormData) => {
     try {
-      if (isLogin) {
-        await authService.login(data);
-        toast.success('Login successful!');
-      } else {
-        await authService.register(data);
-        toast.success('Registration successful!');
-      }
+      const result = await authService.login(data);
+      toast.success('Login successful!');
 
-      // Redirect to admin
-      window.location.href = '/admin';
-
-      if (onSuccess) {
-        onSuccess();
-      }
+      if (onSuccess) onSuccess();
+      window.location.href =
+        result.user?.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard';
     } catch (err) {
       const message =
         err instanceof Error ? err.message : 'Authentication failed';
@@ -72,20 +47,12 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
     }
   };
 
-  const toggleMode = () => {
-    setIsLogin(!isLogin);
-    loginForm.reset();
-    registerForm.reset();
-  };
-
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle>{isLogin ? 'Login' : 'Create Account'}</CardTitle>
+        <CardTitle>Login</CardTitle>
         <CardDescription>
-          {isLogin
-            ? 'Welcome back! Please login to your account.'
-            : 'Create your account to start building your wedding website.'}
+          Masuk menggunakan akun yang dibuat oleh super admin.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -117,26 +84,8 @@ export default function AuthForm({ onSuccess }: AuthFormProps) {
             className="w-full"
             disabled={isSubmitting}
           >
-            {isSubmitting
-              ? 'Loading...'
-              : isLogin
-              ? 'Login'
-              : 'Create Account'}
+            {isSubmitting ? 'Loading...' : 'Login'}
           </Button>
-
-          <div className="text-center text-sm">
-            {isLogin
-              ? "Don't have an account? "
-              : 'Already have an account? '}
-            <button
-              type="button"
-              onClick={toggleMode}
-              className="text-primary hover:underline font-medium"
-              disabled={isSubmitting}
-            >
-              {isLogin ? 'Sign up' : 'Login'}
-            </button>
-          </div>
         </form>
       </CardContent>
     </Card>
