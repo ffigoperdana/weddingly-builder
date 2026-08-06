@@ -13,9 +13,11 @@ export default defineConfig({
     mode: 'standalone',
   }),
   // Coolify terminates TLS and forwards the public host to the container.
-  // Trust only the configured public builder domain so Astro can keep its
-  // CSRF origin check enabled for multipart uploads and other form posts.
+  // Trust only the configured public builder domain for generated request URLs.
+  // CSRF validation itself is performed in src/middleware.ts because a proxy
+  // chain may otherwise make Astro compare against an internal HTTP URL.
   security: {
+    checkOrigin: false,
     allowedDomains: [
       {
         hostname: 'invitation.fgdev.tech',
