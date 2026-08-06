@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { Button } from './ui/button';
 import { AspectRatio } from './ui/aspect-ratio';
 import { Upload, X, Loader2 } from 'lucide-react';
+import { getResponseError } from '../lib/http';
 
 interface ImageUploadProps {
   value?: string;
@@ -52,8 +53,9 @@ export function ImageUpload({
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to upload image');
+        throw new Error(
+          await getResponseError(response, 'Failed to upload image'),
+        );
       }
 
       const result = await response.json();

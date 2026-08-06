@@ -3,6 +3,7 @@
 // imgproxy: On-the-fly image processing
 
 import { env as runtimeEnv } from 'node:process';
+import { getResponseError } from './http';
 
 export interface UploadResult {
   success: boolean;
@@ -213,8 +214,9 @@ export async function uploadImage(file: File): Promise<UploadResult> {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to upload image');
+      throw new Error(
+        await getResponseError(response, 'Failed to upload image'),
+      );
     }
 
     return await response.json();

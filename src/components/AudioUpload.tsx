@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { Upload, Music, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { getResponseError } from '../lib/http';
 
 interface AudioUploadProps {
   value?: string;
@@ -60,7 +61,9 @@ export function AudioUpload({
       });
 
       if (!response.ok) {
-        throw new Error('Upload failed');
+        throw new Error(
+          await getResponseError(response, 'Failed to upload audio'),
+        );
       }
 
       const data = await response.json();
