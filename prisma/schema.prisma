@@ -124,6 +124,7 @@ model WeddingSite {
   rsvpEnabled           Boolean @default(true)
   rsvpGuestCountEnabled Boolean @default(false)
   wishesEnabled         Boolean @default(false)
+  wishesDisplayEnabled  Boolean @default(true)
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -18,6 +18,7 @@ import { Button } from '../ui/button';
 import { FormField } from '../FormField';
 import { Input } from '../ui/input';
 import { ImageUpload } from '../ImageUpload';
+import { WeddingWishesManager } from '../WeddingWishesManager';
 import type { WeddingSiteFormData } from '../../lib/validations';
 
 interface OptionalSectionsSectionProps {
@@ -30,6 +31,7 @@ interface OptionalSectionsSectionProps {
     'storyTimeline',
     'id'
   >;
+  hasSavedSite: boolean;
 }
 
 const defaultDressCodeColors = [
@@ -53,7 +55,8 @@ function SectionToggle({
     | 'liveStreamEnabled'
     | 'rsvpEnabled'
     | 'rsvpGuestCountEnabled'
-    | 'wishesEnabled';
+    | 'wishesEnabled'
+    | 'wishesDisplayEnabled';
   control: Control<WeddingSiteFormData>;
   label: string;
 }) {
@@ -82,6 +85,7 @@ export function OptionalSectionsSection({
   control,
   watch,
   storyTimelineArray,
+  hasSavedSite,
 }: OptionalSectionsSectionProps) {
   const coupleDetailsEnabled = watch('coupleDetailsEnabled');
   const quoteEnabled = watch('quoteEnabled');
@@ -416,26 +420,38 @@ export function OptionalSectionsSection({
               label="Tampilkan RSVP"
             />
           </div>
-          {rsvpEnabled && (
-            <div className="space-y-3 rounded-md bg-muted/40 p-3">
+          <div className="space-y-3 rounded-md bg-muted/40 p-3">
+            {rsvpEnabled && (
               <SectionToggle
                 name="rsvpGuestCountEnabled"
                 control={control}
                 label="Tanyakan jumlah tamu"
               />
-              <SectionToggle
-                name="wishesEnabled"
-                control={control}
-                label="Tampilkan wedding wishes"
-              />
-              {wishesEnabled && (
+            )}
+            <SectionToggle
+              name="wishesEnabled"
+              control={control}
+              label="Tampilkan wedding wishes"
+            />
+            {wishesEnabled && (
+              <>
+                <SectionToggle
+                  name="wishesDisplayEnabled"
+                  control={control}
+                  label="Tampilkan ucapan tamu kepada publik"
+                />
                 <p className="text-xs text-muted-foreground">
-                  Ucapan akan disimpan di database dan ditampilkan
-                  kepada tamu lain.
+                  Ucapan tetap dapat dikirim meski daftar ucapan publik
+                  disembunyikan. Kamu dapat menghapus ucapan dari daftar
+                  moderasi di bawah ini.
                 </p>
-              )}
-            </div>
-          )}
+                <WeddingWishesManager
+                  enabled={wishesEnabled}
+                  hasSavedSite={hasSavedSite}
+                />
+              </>
+            )}
+          </div>
         </section>
       </CardContent>
     </Card>

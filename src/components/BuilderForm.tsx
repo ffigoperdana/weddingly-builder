@@ -162,6 +162,7 @@ export default function BuilderForm({
       rsvpGuestCountEnabled:
         initialData?.rsvpGuestCountEnabled ?? false,
       wishesEnabled: initialData?.wishesEnabled ?? false,
+      wishesDisplayEnabled: initialData?.wishesDisplayEnabled ?? true,
 
       // Publishing
       slug: initialData?.slug || '',
@@ -260,6 +261,8 @@ export default function BuilderForm({
         rsvpGuestCountEnabled:
           initialData.rsvpGuestCountEnabled ?? false,
         wishesEnabled: initialData.wishesEnabled ?? false,
+        wishesDisplayEnabled:
+          initialData.wishesDisplayEnabled ?? true,
         slug: initialData.slug || '',
         password: initialData.password || '',
         events:
@@ -442,7 +445,7 @@ export default function BuilderForm({
         control={control}
         watch={watch}
         storyTimelineArray={storyTimelineArray}
-        bankAccountsArray={bankAccountsArray}
+        hasSavedSite={Boolean(initialData?.id)}
       />
 
       <PublishingSection

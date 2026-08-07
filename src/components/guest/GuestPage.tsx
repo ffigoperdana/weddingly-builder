@@ -481,6 +481,7 @@ export default function GuestPage({ slug }: GuestPageProps) {
                 <GuestWishesSection
                   siteSlug={weddingSite.slug}
                   guestName={guestName || undefined}
+                  showPublicWishes={weddingSite.wishesDisplayEnabled !== false}
                   primaryColor={weddingSite.primaryColor}
                   headingFont={weddingSite.headingFont}
                   bodyFont={weddingSite.bodyFont}

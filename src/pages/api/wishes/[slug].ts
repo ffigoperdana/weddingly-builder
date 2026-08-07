@@ -20,14 +20,19 @@ export const GET: APIRoute = async ({ params }) => {
 
     const weddingSite = await prisma.weddingSite.findUnique({
       where: { slug },
-      select: { id: true, isPublished: true, wishesEnabled: true },
+      select: {
+        id: true,
+        isPublished: true,
+        wishesEnabled: true,
+        wishesDisplayEnabled: true,
+      },
     });
 
     if (!weddingSite || !weddingSite.isPublished) {
       return json({ error: 'Wedding site not found' }, 404);
     }
 
-    if (!weddingSite.wishesEnabled) {
+    if (!weddingSite.wishesEnabled || !weddingSite.wishesDisplayEnabled) {
       return json({ wishes: [] });
     }
 

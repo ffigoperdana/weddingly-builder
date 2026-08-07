@@ -108,6 +108,21 @@ function getMapUrl(event: GuestWeddingEvent) {
   );
 }
 
+function getMapEmbedUrl(event: GuestWeddingEvent) {
+  if (
+    /^https?:\/\//i.test(event.address) &&
+    (/embed/i.test(event.address) || /output=embed/i.test(event.address))
+  ) {
+    return event.address;
+  }
+
+  return (
+    'https://www.google.com/maps?q=' +
+    encodeURIComponent(event.location + ' ' + event.address) +
+    '&output=embed'
+  );
+}
+
 function getInitials(brideName?: string, groomName?: string) {
   const brideInitial = brideName?.trim().charAt(0) || 'B';
   const groomInitial = groomName?.trim().charAt(0) || 'G';
@@ -592,6 +607,15 @@ export function AutumnGuestTemplate({
                       <small>{event.address}</small>
                     </span>
                   </p>
+                  <div className="autumn-event-card__map">
+                    <iframe
+                      src={getMapEmbedUrl(event)}
+                      loading="lazy"
+                      referrerPolicy="no-referrer-when-downgrade"
+                      allowFullScreen
+                      title={`Peta lokasi ${event.title}`}
+                    />
+                  </div>
                   <a
                     className="autumn-text-link"
                     href={getMapUrl(event)}
@@ -750,6 +774,7 @@ export function AutumnGuestTemplate({
           <GuestWishesSection
             siteSlug={weddingSite.slug}
             guestName={guestName}
+            showPublicWishes={weddingSite.wishesDisplayEnabled !== false}
             primaryColor={weddingSite.primaryColor}
             headingFont={weddingSite.headingFont}
             bodyFont={weddingSite.bodyFont}

@@ -66,6 +66,7 @@ export interface GuestWeddingSite {
   rsvpEnabled?: boolean;
   rsvpGuestCountEnabled?: boolean;
   wishesEnabled?: boolean;
+  wishesDisplayEnabled?: boolean;
   events: GuestWeddingEvent[];
 }
 

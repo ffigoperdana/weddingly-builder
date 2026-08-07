@@ -303,24 +303,59 @@
   font-size: 13px;
   font-weight: 800;
   text-decoration: none;
-  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease;
 }
 
 .autumn-button:hover {
   transform: translateY(-2px);
 }
 
+.autumn-button:active {
+  transform: translateY(0);
+}
+
+.autumn-button:focus-visible,
+.autumn-music-toggle:focus-visible,
+.autumn-lightbox__close:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--autumn-accent) 70%, #fff9e8);
+  outline-offset: 3px;
+}
+
 .autumn-button--primary {
-  border-color: color-mix(in srgb, var(--autumn-primary) 80%, #36130a);
-  background: linear-gradient(135deg, var(--autumn-primary), #6f2e1c);
-  box-shadow: 0 12px 22px color-mix(in srgb, var(--autumn-primary) 30%, transparent);
-  color: #fff8e9;
+  border-color: color-mix(in srgb, var(--autumn-primary) 46%, #fff9e8);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--autumn-primary) 62%, #fff9e8),
+    color-mix(in srgb, var(--autumn-secondary) 56%, #fff9e8)
+  );
+  box-shadow: 0 12px 22px color-mix(in srgb, var(--autumn-primary) 24%, transparent);
+  color: var(--autumn-ink);
+}
+
+.autumn-button--primary:hover {
+  border-color: color-mix(in srgb, var(--autumn-primary) 58%, #fff9e8);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--autumn-primary) 52%, #fff9e8),
+    color-mix(in srgb, var(--autumn-secondary) 44%, #fff9e8)
+  );
+  box-shadow: 0 16px 28px color-mix(in srgb, var(--autumn-primary) 32%, transparent);
 }
 
 .autumn-button--secondary {
-  border-color: var(--autumn-line);
-  background: rgba(255, 253, 244, 0.84);
+  border-color: color-mix(in srgb, var(--autumn-primary) 28%, #fff9e8);
+  background: rgba(255, 253, 244, 0.92);
   color: var(--autumn-ink);
+}
+
+.autumn-button--secondary:hover {
+  border-color: color-mix(in srgb, var(--autumn-primary) 48%, #fff9e8);
+  background: #fff9e8;
+  box-shadow: 0 12px 22px color-mix(in srgb, var(--autumn-primary) 18%, transparent);
 }
 
 .autumn-shell {
@@ -352,6 +387,11 @@
   color: #fff9e8;
   font-size: 11px;
   font-weight: 700;
+}
+
+.autumn-music-toggle:hover {
+  border-color: rgba(255, 249, 232, 0.56);
+  background: rgba(255, 249, 232, 0.2);
 }
 
 .autumn-hero {
@@ -545,6 +585,53 @@
 .autumn-invitation .guest-wishes-section textarea {
   border-color: var(--autumn-line);
   background: rgba(255, 253, 244, 0.95);
+}
+
+.autumn-invitation .guest-live-stream-section a,
+.autumn-invitation .guest-registry-details-section button,
+.autumn-invitation .guest-wishes-section button[type="submit"],
+.autumn-invitation .autumn-rsvp__card button[type="submit"] {
+  border: 1px solid color-mix(in srgb, var(--autumn-primary) 42%, #fff9e8);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--autumn-primary) 62%, #fff9e8),
+    color-mix(in srgb, var(--autumn-secondary) 56%, #fff9e8)
+  ) !important;
+  box-shadow: 0 10px 20px color-mix(in srgb, var(--autumn-primary) 18%, transparent);
+  color: var(--autumn-ink) !important;
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    background 180ms ease,
+    border-color 180ms ease;
+}
+
+.autumn-invitation .guest-live-stream-section a:hover,
+.autumn-invitation .guest-registry-details-section button:hover,
+.autumn-invitation .guest-wishes-section button[type="submit"]:hover,
+.autumn-invitation .autumn-rsvp__card button[type="submit"]:hover {
+  border-color: color-mix(in srgb, var(--autumn-primary) 58%, #fff9e8);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--autumn-primary) 50%, #fff9e8),
+    color-mix(in srgb, var(--autumn-secondary) 44%, #fff9e8)
+  ) !important;
+  box-shadow: 0 14px 26px color-mix(in srgb, var(--autumn-primary) 28%, transparent);
+  transform: translateY(-2px);
+}
+
+.autumn-invitation .guest-live-stream-section a:active,
+.autumn-invitation .guest-registry-details-section button:active,
+.autumn-invitation .guest-wishes-section button[type="submit"]:active,
+.autumn-invitation .autumn-rsvp__card button[type="submit"]:active {
+  transform: translateY(0);
+}
+
+.autumn-invitation .guest-wishes-section button[type="submit"]:disabled,
+.autumn-invitation .autumn-rsvp__card button[type="submit"]:disabled {
+  cursor: wait;
+  opacity: 0.65;
+  transform: none;
 }
 
 .autumn-section--couple {
@@ -742,6 +829,24 @@
   margin-top: 2px;
   color: var(--autumn-muted);
   font-size: 12px;
+}
+
+.autumn-event-card__map {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+  margin-top: 18px;
+  border: 1px solid var(--autumn-line);
+  border-radius: 14px;
+  background: var(--autumn-paper-muted);
+}
+
+.autumn-event-card__map iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
 }
 
 .autumn-text-link {
@@ -948,7 +1053,7 @@
 }
 
 .autumn-rsvp__card button[type="submit"] {
-  background: var(--autumn-primary) !important;
+  min-height: 44px;
 }
 
 .autumn-footer {
@@ -1056,6 +1161,11 @@
   background: rgba(255, 249, 232, 0.1);
   color: #fff9e8;
   place-items: center;
+}
+
+.autumn-lightbox__close:hover {
+  border-color: rgba(255, 249, 232, 0.58);
+  background: rgba(255, 249, 232, 0.2);
 }
 
 @keyframes autumn-pop-in {

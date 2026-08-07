@@ -571,11 +571,13 @@ export function GuestRegistryDetailsSection({
 interface GuestWishesSectionProps extends GuestSectionStyleProps {
   siteSlug: string;
   guestName?: string;
+  showPublicWishes?: boolean;
 }
 
 export function GuestWishesSection({
   siteSlug,
   guestName,
+  showPublicWishes = true,
   primaryColor = '#e4b6c6',
   headingFont = 'Playfair Display',
   bodyFont = 'Lato',
@@ -586,18 +588,40 @@ export function GuestWishesSection({
   const [fullName, setFullName] = useState(guestName || '');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoadingWishes, setIsLoadingWishes] = useState(true);
   const [error, setError] = useState('');
 
   useEffect(() => {
+    let isActive = true;
+
+    if (!showPublicWishes) {
+      setWishes([]);
+      setIsLoadingWishes(false);
+      return () => {
+        isActive = false;
+      };
+    }
+
+    setIsLoadingWishes(true);
+
     fetch('/api/wishes/' + siteSlug)
       .then((response) => (response.ok ? response.json() : null))
       .then((data) => {
-        if (data?.wishes) {
+        if (isActive && data?.wishes) {
           setWishes(data.wishes);
         }
       })
-      .catch(() => undefined);
-  }, [siteSlug]);
+      .catch(() => undefined)
+      .finally(() => {
+        if (isActive) {
+          setIsLoadingWishes(false);
+        }
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [siteSlug, showPublicWishes]);
 
   const submitWish = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -691,26 +715,37 @@ export function GuestWishesSection({
             </button>
           </div>
         </form>
-        <div className="mt-6 space-y-3">
-          {wishes.map((wish) => (
-            <article
-              key={wish.id}
-              className="rounded-xl border bg-white p-4 shadow-sm"
-            >
-              <div className="flex items-center justify-between gap-3">
-                <strong className="text-sm text-gray-800">
-                  {wish.fullName}
-                </strong>
-                <time className="text-xs text-gray-500">
-                  {new Date(wish.createdAt).toLocaleDateString('id-ID')}
-                </time>
-              </div>
-              <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-gray-600">
-                {wish.message}
+        {showPublicWishes && (
+          <div
+            className="guest-wishes-list mt-6 space-y-3"
+            aria-label="Daftar wedding wishes"
+          >
+            {isLoadingWishes ? (
+              <p className="py-4 text-center text-sm text-gray-500">
+                Memuat ucapan...
               </p>
-            </article>
-          ))}
-        </div>
+            ) : (
+              wishes.map((wish) => (
+                <article
+                  key={wish.id}
+                  className="rounded-xl border bg-white p-4 shadow-sm"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <strong className="text-sm text-gray-800">
+                      {wish.fullName}
+                    </strong>
+                    <time className="text-xs text-gray-500">
+                      {new Date(wish.createdAt).toLocaleDateString('id-ID')}
+                    </time>
+                  </div>
+                  <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-gray-600">
+                    {wish.message}
+                  </p>
+                </article>
+              ))
+            )}
+          </div>
+        )}
       </div>
     </section>
   );

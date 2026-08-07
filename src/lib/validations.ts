@@ -196,6 +196,7 @@ export const weddingSiteSchema = z.object({
   rsvpEnabled: z.boolean().default(true),
   rsvpGuestCountEnabled: z.boolean().default(false),
   wishesEnabled: z.boolean().default(false),
+  wishesDisplayEnabled: z.boolean().default(true),
 
   // Publishing
   slug: z.string().optional(),
@@ -282,6 +283,7 @@ export interface WeddingSite {
   rsvpEnabled: boolean;
   rsvpGuestCountEnabled: boolean;
   wishesEnabled: boolean;
+  wishesDisplayEnabled: boolean;
   createdAt: Date;
   updatedAt: Date;
   events?: Event[];

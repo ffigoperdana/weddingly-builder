@@ -118,3 +118,10 @@
     @apply bg-background text-foreground;
   }
 }
+
+.guest-wishes-list {
+  max-height: 28rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
