@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useForm, useFieldArray } from 'react-hook-form';
+import {
+  useForm,
+  useFieldArray,
+  type FieldErrors,
+} from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { Button } from './ui/button';
@@ -26,12 +30,58 @@ interface BuilderFormProps {
   onSave?: (data: WeddingSite) => void;
 }
 
+type ActionStatus = {
+  kind: 'success' | 'error';
+  message: string;
+} | null;
+
+function getFirstFormErrorMessage(
+  errors: FieldErrors<WeddingSiteFormData>,
+): string | undefined {
+  const visited = new WeakSet<object>();
+
+  const visit = (value: unknown): string | undefined => {
+    if (!value || typeof value !== 'object') return undefined;
+
+    if (visited.has(value)) return undefined;
+    visited.add(value);
+
+    const record = value as Record<string, unknown>;
+    if (typeof record.message === 'string') return record.message;
+
+    for (const [key, child] of Object.entries(record)) {
+      if (key === 'ref') continue;
+      const message = visit(child);
+      if (message) return message;
+    }
+
+    return undefined;
+  };
+
+  return visit(errors);
+}
+
+function getOrCreateSlug(data: WeddingSiteFormData) {
+  const currentSlug = data.slug?.trim();
+  if (currentSlug) return currentSlug;
+
+  if (!data.brideName?.trim() || !data.groomName?.trim()) {
+    return '';
+  }
+
+  return `${data.brideName}-and-${data.groomName}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
 export default function BuilderForm({
   initialData,
   onSave,
 }: BuilderFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [actionStatus, setActionStatus] = useState<ActionStatus>(null);
 
   const form = useForm<WeddingSiteFormData>({
     resolver: zodResolver(weddingSiteSchema),
@@ -132,7 +182,7 @@ export default function BuilderForm({
     handleSubmit,
     watch,
     setValue,
-    formState: { errors, isSubmitting },
+    formState: { errors },
   } = form;
 
   const eventsArray = useFieldArray({
@@ -221,23 +271,32 @@ export default function BuilderForm({
     }
   }, [initialData, form]);
 
+  const handleInvalid = (validationErrors: FieldErrors<WeddingSiteFormData>) => {
+    const firstError = getFirstFormErrorMessage(validationErrors);
+    const message = firstError
+      ? `Periksa isian form: ${firstError}`
+      : 'Periksa isian form yang ditandai merah sebelum melanjutkan.';
+
+    setActionStatus({ kind: 'error', message });
+    toast.error(message);
+  };
+
   const onSubmit = async (data: WeddingSiteFormData) => {
     setIsSaving(true);
+    setActionStatus(null);
     try {
-      // Auto-generate slug if empty
-      if (!data.slug && data.brideName && data.groomName) {
-        data.slug = `${data.brideName}-and-${data.groomName}`
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-');
-      }
+      const slug = getOrCreateSlug(data);
 
       // Save as draft (isPublished = false)
       const result = await weddingSiteService.save({
         ...data,
+        slug,
         isPublished: false,
       });
 
-      toast.success('Wedding site saved as draft!');
+      const message = 'Draft undangan berhasil disimpan.';
+      setActionStatus({ kind: 'success', message });
+      toast.success(message);
 
       if (onSave) {
         onSave(result.weddingSite);
@@ -247,6 +306,7 @@ export default function BuilderForm({
         error instanceof Error
           ? error.message
           : 'Failed to save wedding site';
+      setActionStatus({ kind: 'error', message });
       toast.error(message);
     } finally {
       setIsSaving(false);
@@ -255,27 +315,33 @@ export default function BuilderForm({
 
   const handlePublish = handleSubmit(async (data) => {
     setIsPublishing(true);
+    setActionStatus(null);
     try {
-      // Validate required fields for publishing
-      if (!data.slug) {
-        toast.error('Please provide a URL slug before publishing');
+      const slug = getOrCreateSlug(data);
+      if (!slug) {
+        const message =
+          'Isi URL slug atau nama kedua mempelai sebelum publish.';
+        setActionStatus({ kind: 'error', message });
+        toast.error(message);
         return;
-      }
-
-      // Auto-generate slug if empty
-      if (!data.slug && data.brideName && data.groomName) {
-        data.slug = `${data.brideName}-and-${data.groomName}`
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, '-');
       }
 
       // Publish the site (isPublished = true)
       const result = await weddingSiteService.save({
         ...data,
+        slug,
         isPublished: true,
       });
 
-      toast.success('Wedding site published successfully!');
+      if (!result.weddingSite?.isPublished) {
+        throw new Error(
+          'Server menyimpan data, tetapi status publish belum aktif.',
+        );
+      }
+
+      const message = 'Website berhasil dipublish dan sudah live.';
+      setActionStatus({ kind: 'success', message });
+      toast.success(message);
 
       if (onSave) {
         onSave(result.weddingSite);
@@ -285,15 +351,16 @@ export default function BuilderForm({
         error instanceof Error
           ? error.message
           : 'Failed to publish wedding site';
+      setActionStatus({ kind: 'error', message });
       toast.error(message);
     } finally {
       setIsPublishing(false);
     }
-  });
+  }, handleInvalid);
 
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(onSubmit, handleInvalid)}
       className="space-y-6 pb-10"
     >
       {/* Publishing Status Badge */}
@@ -385,6 +452,19 @@ export default function BuilderForm({
       />
 
       {/* Action Buttons */}
+      {actionStatus && (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`rounded-lg border px-4 py-3 text-sm ${
+            actionStatus.kind === 'success'
+              ? 'border-green-200 bg-green-50 text-green-800'
+              : 'border-red-200 bg-red-50 text-red-800'
+          }`}
+        >
+          {actionStatus.message}
+        </div>
+      )}
       <div className="flex gap-4 sticky bottom-0 bg-background py-4 border-t">
         <Button
           type="submit"

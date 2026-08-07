@@ -43,12 +43,16 @@ export const POST: APIRoute = async (context) => {
     const session = await requireAuth(context);
     const data = await context.request.json();
 
-    // Check if site exists
-    const existingSite = await prisma.weddingSite.findUnique({
-      where: { userId: session.userId },
-    });
-
-    const { events, templateId, ...siteData } = data;
+    const {
+      events,
+      templateId,
+      slug: requestedSlug,
+      id: _ignoredId,
+      userId: _ignoredUserId,
+      createdAt: _ignoredCreatedAt,
+      updatedAt: _ignoredUpdatedAt,
+      ...siteData
+    } = data;
     const requestedTemplate = isWeddingTemplateId(templateId)
       ? templateId
       : 'classic';
@@ -58,41 +62,53 @@ export const POST: APIRoute = async (context) => {
     });
     const selectedTemplate = activeTemplate?.id ?? 'classic';
 
-    let weddingSite: Awaited<
-      ReturnType<typeof prisma.weddingSite.create>
-    > | null = null;
+    const requestedSlugValue =
+      typeof requestedSlug === 'string' ? requestedSlug.trim() : '';
 
-    if (existingSite) {
-      // Update existing site
-      weddingSite = await prisma.weddingSite.update({
+    // Save the site and its events atomically. The previous implementation
+    // returned the site before replacing an empty event list and allowed
+    // client-only fields to be spread into the write. Returning a fresh read
+    // here also guarantees that the dashboard receives the exact published
+    // snapshot that the guest page will read.
+    const weddingSite = await prisma.$transaction(async (tx) => {
+      const existingSite = await tx.weddingSite.findUnique({
         where: { userId: session.userId },
-        data: {
-          ...siteData,
-          templateId: selectedTemplate,
-          weddingDate: siteData.weddingDate
-            ? new Date(siteData.weddingDate)
-            : null,
-        },
-        include: {
-          events: {
-            orderBy: { order: 'asc' },
-          },
-        },
+        select: { id: true, slug: true },
       });
 
-      // Handle events if provided
-      if (events) {
-        // Delete existing events
-        await prisma.event.deleteMany({
-          where: { siteId: weddingSite.id },
+      const savedSite = existingSite
+        ? await tx.weddingSite.update({
+            where: { id: existingSite.id },
+            data: {
+              ...siteData,
+              slug: requestedSlugValue || existingSite.slug,
+              templateId: selectedTemplate,
+              weddingDate: siteData.weddingDate
+                ? new Date(siteData.weddingDate)
+                : null,
+            },
+          })
+        : await tx.weddingSite.create({
+            data: {
+              userId: session.userId,
+              ...siteData,
+              slug: requestedSlugValue || `wedding-${Date.now()}`,
+              templateId: selectedTemplate,
+              weddingDate: siteData.weddingDate
+                ? new Date(siteData.weddingDate)
+                : null,
+            },
+          });
+
+      if (Array.isArray(events)) {
+        await tx.event.deleteMany({
+          where: { siteId: savedSite.id },
         });
 
-        // Create new events
-        if (events.length > 0 && weddingSite) {
-          const siteId = weddingSite.id;
-          await prisma.event.createMany({
+        if (events.length > 0) {
+          await tx.event.createMany({
             data: events.map((event: EventData, index: number) => ({
-              siteId,
+              siteId: savedSite.id,
               title: event.title,
               date: new Date(event.date),
               time: event.time,
@@ -101,62 +117,21 @@ export const POST: APIRoute = async (context) => {
               order: index,
             })),
           });
-
-          // Fetch updated site with events
-          weddingSite = await prisma.weddingSite.findUnique({
-            where: { id: siteId },
-            include: {
-              events: {
-                orderBy: { order: 'asc' },
-              },
-            },
-          });
         }
       }
-    } else {
-      // Create new site
-      weddingSite = await prisma.weddingSite.create({
-        data: {
-          userId: session.userId,
-          slug: siteData.slug || `wedding-${Date.now()}`,
-          ...siteData,
-          templateId: selectedTemplate,
-          weddingDate: siteData.weddingDate
-            ? new Date(siteData.weddingDate)
-            : null,
-        },
+
+      return tx.weddingSite.findUnique({
+        where: { id: savedSite.id },
         include: {
           events: {
             orderBy: { order: 'asc' },
           },
         },
       });
+    });
 
-      // Create events if provided
-      if (events && events.length > 0 && weddingSite) {
-        const siteId = weddingSite.id;
-        await prisma.event.createMany({
-          data: events.map((event: EventData, index: number) => ({
-            siteId,
-            title: event.title,
-            date: new Date(event.date),
-            time: event.time,
-            location: event.location,
-            address: event.address,
-            order: index,
-          })),
-        });
-
-        // Fetch updated site with events
-        weddingSite = await prisma.weddingSite.findUnique({
-          where: { id: siteId },
-          include: {
-            events: {
-              orderBy: { order: 'asc' },
-            },
-          },
-        });
-      }
+    if (!weddingSite) {
+      throw new Error('Wedding site could not be loaded after saving');
     }
 
     return new Response(JSON.stringify({ weddingSite }), {
