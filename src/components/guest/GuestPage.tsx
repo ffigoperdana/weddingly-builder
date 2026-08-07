@@ -82,7 +82,9 @@ export default function GuestPage({ slug }: GuestPageProps) {
     const params = new URLSearchParams(window.location.search);
     const toParam = params.get('to');
     if (toParam) {
-      setGuestName(decodeURIComponent(toParam));
+      // URLSearchParams already decodes the query value. Decoding it again
+      // breaks names containing percent signs and can throw URIError.
+      setGuestName(toParam);
     }
 
     fetchWeddingSite();

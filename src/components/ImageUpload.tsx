@@ -9,6 +9,7 @@ import { Button } from './ui/button';
 import { AspectRatio } from './ui/aspect-ratio';
 import { Upload, X, Loader2 } from 'lucide-react';
 import { getResponseError } from '../lib/http';
+import { normalizeImgproxyUrl } from '../lib/media-url';
 
 interface ImageUploadProps {
   value?: string;
@@ -28,6 +29,7 @@ export function ImageUpload({
   const [uploading, setUploading] = useState(false);
   const [dragActive, setDragActive] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const previewUrl = normalizeImgproxyUrl(value);
 
   const handleUpload = async (file: File) => {
     setUploading(true);
@@ -118,11 +120,11 @@ export function ImageUpload({
         </label>
       )}
 
-      {value ? (
+      {previewUrl ? (
         <div className="relative group">
           <AspectRatio ratio={16 / 9}>
             <img
-              src={value}
+              src={previewUrl}
               alt="Upload preview"
               className="w-full h-full object-cover rounded-md border"
             />

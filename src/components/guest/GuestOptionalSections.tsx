@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
+import { normalizeImgproxyUrl } from '../../lib/media-url';
 import type {
   BankAccount,
   StoryTimelineItem,
@@ -94,20 +95,22 @@ export function GuestCoupleDetailsSection({
   headingFont = 'Playfair Display',
   bodyFont = 'Lato',
 }: GuestCoupleDetailsSectionProps) {
+  const normalizedBridePhotoUrl = normalizeImgproxyUrl(bridePhotoUrl);
+  const normalizedGroomPhotoUrl = normalizeImgproxyUrl(groomPhotoUrl);
   const people = [
     {
       label: 'Mempelai wanita',
       name: brideName || 'Mempelai Wanita',
       fullName: brideFullName,
       parents: brideParents,
-      photoUrl: bridePhotoUrl,
+      photoUrl: normalizedBridePhotoUrl,
     },
     {
       label: 'Mempelai pria',
       name: groomName || 'Mempelai Pria',
       fullName: groomFullName,
       parents: groomParents,
-      photoUrl: groomPhotoUrl,
+      photoUrl: normalizedGroomPhotoUrl,
     },
   ];
 
@@ -147,6 +150,8 @@ export function GuestCoupleDetailsSection({
                     src={person.photoUrl}
                     alt={person.fullName || person.name}
                     className="h-full w-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 ) : (
                   <span

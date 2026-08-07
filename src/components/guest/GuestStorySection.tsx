@@ -1,3 +1,5 @@
+import { normalizeImgproxyUrl } from '../../lib/media-url';
+
 interface StorySectionProps {
   storyTitle?: string;
   storyText?: string;
@@ -17,7 +19,12 @@ export function GuestStorySection({
   headingFont = 'Playfair Display',
   bodyFont = 'Lato',
 }: StorySectionProps) {
-  if (!storyText && !storyImage1Url && !storyImage2Url) return null;
+  const normalizedStoryImage1Url = normalizeImgproxyUrl(storyImage1Url);
+  const normalizedStoryImage2Url = normalizeImgproxyUrl(storyImage2Url);
+
+  if (!storyText && !normalizedStoryImage1Url && !normalizedStoryImage2Url) {
+    return null;
+  }
 
   return (
     <section
@@ -49,39 +56,43 @@ export function GuestStorySection({
           )}
 
           {/* Images */}
-          {(storyImage1Url || storyImage2Url) && (
+          {(normalizedStoryImage1Url || normalizedStoryImage2Url) && (
             <div
               className={`grid gap-6 ${
-                storyImage1Url && storyImage2Url
+                normalizedStoryImage1Url && normalizedStoryImage2Url
                   ? 'sm:grid-cols-2'
                   : 'sm:grid-cols-1'
               }`}
             >
-              {storyImage1Url && (
+              {normalizedStoryImage1Url && (
                 <div
-                  className="rounded-lg overflow-hidden shadow-lg"
+                  className="rounded-lg overflow-hidden bg-gray-100 shadow-lg"
                   style={{
                     border: `3px solid ${primaryColor}`,
                   }}
                 >
                   <img
-                    src={storyImage1Url}
+                    src={normalizedStoryImage1Url}
                     alt="Our story"
                     className="w-full h-64 sm:h-80 object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
               )}
-              {storyImage2Url && (
+              {normalizedStoryImage2Url && (
                 <div
-                  className="rounded-lg overflow-hidden shadow-lg"
+                  className="rounded-lg overflow-hidden bg-gray-100 shadow-lg"
                   style={{
                     border: `3px solid ${primaryColor}`,
                   }}
                 >
                   <img
-                    src={storyImage2Url}
+                    src={normalizedStoryImage2Url}
                     alt="Our story"
                     className="w-full h-64 sm:h-80 object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
               )}

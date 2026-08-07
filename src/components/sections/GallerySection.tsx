@@ -19,6 +19,7 @@ import { FormField } from '../FormField';
 import { ImageUpload } from '../ImageUpload';
 import { Trash2, Plus } from 'lucide-react';
 import type { WeddingSiteFormData } from '../../lib/validations';
+import { normalizeImgproxyUrl } from '../../lib/media-url';
 
 interface GallerySectionProps {
   register: UseFormRegister<WeddingSiteFormData>;
@@ -130,7 +131,7 @@ export function GallerySection({
                         )}`}
                       >
                         <img
-                          src={url}
+                          src={normalizeImgproxyUrl(url) || url}
                           alt={`Gallery ${index + 1}`}
                           className="w-full h-full object-cover rounded-md border"
                         />

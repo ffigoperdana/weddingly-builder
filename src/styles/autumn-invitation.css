@@ -175,6 +175,65 @@
   text-shadow: 0 3px 18px rgba(0, 0, 0, 0.34);
 }
 
+.autumn-cover__portrait.is-loading,
+.autumn-hero__photo.is-loading {
+  background:
+    linear-gradient(135deg, rgba(255, 249, 232, 0.18), rgba(255, 249, 232, 0.05)),
+    linear-gradient(155deg, #8b4a2d, #4e2418);
+}
+
+.autumn-image-loading {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: rgba(255, 249, 232, 0.82);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.autumn-image-loading__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 249, 232, 0.3);
+  border-top-color: #fff9e8;
+  border-radius: 50%;
+  animation: autumn-spin 800ms linear infinite;
+}
+
+.autumn-cover__progress {
+  display: grid;
+  gap: 7px;
+  width: min(100%, 220px);
+  margin: 16px auto 0;
+  color: var(--autumn-muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.autumn-cover__progress-track {
+  position: relative;
+  display: block;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--autumn-line);
+}
+
+.autumn-cover__progress-track span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 38%;
+  border-radius: inherit;
+  background: var(--autumn-primary);
+  animation: autumn-loading-progress 1.2s ease-in-out infinite;
+}
+
 .autumn-cover__card h1 {
   position: relative;
   z-index: 1;
@@ -747,6 +806,42 @@
   line-height: 1.75;
 }
 
+.autumn-story__images {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 28px;
+}
+
+.autumn-story__images--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.autumn-story__image {
+  min-height: 220px;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  background: var(--autumn-secondary);
+  box-shadow: 0 12px 28px rgba(70, 30, 16, 0.12);
+  cursor: zoom-in;
+}
+
+.autumn-story__image img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  object-fit: cover;
+  transition: transform 350ms ease, filter 350ms ease;
+}
+
+.autumn-story__image:hover img {
+  filter: saturate(1.1);
+  transform: scale(1.06);
+}
+
 .autumn-gallery {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -1002,6 +1097,22 @@
   }
 }
 
+@keyframes autumn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes autumn-loading-progress {
+  from {
+    transform: translateX(-125%);
+  }
+
+  to {
+    transform: translateX(285%);
+  }
+}
+
 @media (max-width: 390px) {
   .autumn-hero {
     padding-right: 18px;
@@ -1033,7 +1144,10 @@
   }
 
   .autumn-button,
-  .autumn-gallery__item img {
+  .autumn-gallery__item img,
+  .autumn-image-loading__spinner,
+  .autumn-cover__progress-track span {
     transition: none;
+    animation: none;
   }
 }

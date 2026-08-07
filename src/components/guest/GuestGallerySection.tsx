@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { normalizeImgproxyUrl } from '../../lib/media-url';
 
 interface GallerySectionProps {
   galleryTitle?: string;
@@ -13,11 +14,14 @@ export function GuestGallerySection({
   primaryColor = '#e4b6c6',
   headingFont = 'Playfair Display',
 }: GallerySectionProps) {
+  const normalizedGalleryImages = galleryImages
+    .map((image) => normalizeImgproxyUrl(image))
+    .filter((image): image is string => Boolean(image));
   const [selectedImage, setSelectedImage] = useState<string | null>(
     null,
   );
 
-  if (!galleryImages || galleryImages.length === 0) return null;
+  if (normalizedGalleryImages.length === 0) return null;
 
   const getGridLayout = (count: number) => {
     // Smart layout based on image count
@@ -56,23 +60,25 @@ export function GuestGallerySection({
           </h2>
 
           <div
-            className={`grid ${getGridLayout(
-              galleryImages.length,
+              className={`grid ${getGridLayout(
+              normalizedGalleryImages.length,
             )} auto-rows-[12rem] sm:auto-rows-[16rem] gap-3 sm:gap-4`}
           >
-            {galleryImages.map((image, index) => (
+            {normalizedGalleryImages.map((image, index) => (
               <button
                 key={index}
                 onClick={() => setSelectedImage(image)}
-                className={`relative overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow cursor-pointer group ${getImageSpan(
+                className={`relative overflow-hidden rounded-lg bg-gray-200 shadow-md hover:shadow-xl transition-shadow cursor-pointer group ${getImageSpan(
                   index,
-                  galleryImages.length,
+                  normalizedGalleryImages.length,
                 )}`}
               >
                 <img
                   src={image}
                   alt={`Gallery image ${index + 1}`}
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                  loading="lazy"
+                  decoding="async"
                 />
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors" />
               </button>
@@ -98,6 +104,8 @@ export function GuestGallerySection({
             src={selectedImage}
             alt="Full size"
             className="max-w-full max-h-full object-contain"
+            loading="eager"
+            decoding="async"
             onClick={(e) => e.stopPropagation()}
           />
         </div>

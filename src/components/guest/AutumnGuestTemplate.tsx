@@ -30,6 +30,8 @@ import {
   GuestWishesSection,
 } from './GuestOptionalSections';
 import type { GuestWeddingEvent, GuestWeddingSite } from './types';
+import { normalizeImgproxyUrl } from '../../lib/media-url';
+import { useImageReady } from './useImageReady';
 import '../../styles/autumn-invitation.css';
 
 interface AutumnGuestTemplateProps {
@@ -136,15 +138,28 @@ export function AutumnGuestTemplate({
   const groomName = weddingSite.groomName || 'Mempelai Pria';
   const coupleName = brideName + ' & ' + groomName;
   const initials = getInitials(weddingSite.brideName, weddingSite.groomName);
-  const heroStyle = weddingSite.heroImageUrl
-    ? { backgroundImage: 'url("' + weddingSite.heroImageUrl + '")' }
+  const heroImageUrl = normalizeImgproxyUrl(weddingSite.heroImageUrl);
+  const heroImageReady = useImageReady(heroImageUrl);
+  const heroImageVisible = Boolean(heroImageUrl && heroImageReady);
+  const storyImage1Url = normalizeImgproxyUrl(weddingSite.storyImage1Url);
+  const storyImage2Url = normalizeImgproxyUrl(weddingSite.storyImage2Url);
+  const galleryImages = weddingSite.galleryImages
+    .map((image) => normalizeImgproxyUrl(image))
+    .filter((image): image is string => Boolean(image));
+  const heroStyle = heroImageVisible
+    ? { backgroundImage: 'url("' + heroImageUrl + '")' }
     : undefined;
   const storyParagraphs = (weddingSite.storyText || '')
     .split(/\n+/)
     .map((paragraph) => paragraph.trim())
     .filter(Boolean);
+  const hasStoryContent = Boolean(
+    weddingSite.storyText?.trim() ||
+      storyImage1Url ||
+      storyImage2Url,
+  );
   const hasGallery =
-    weddingSite.galleryEnabled && weddingSite.galleryImages.length > 0;
+    weddingSite.galleryEnabled && galleryImages.length > 0;
   const hasRegistry =
     weddingSite.registryEnabled &&
     Boolean(
@@ -354,11 +369,25 @@ export function AutumnGuestTemplate({
             <div
               className={
                 'autumn-cover__portrait ' +
-                (weddingSite.heroImageUrl ? 'has-image' : '')
+                (heroImageVisible
+                  ? 'has-image'
+                  : heroImageUrl
+                    ? 'is-loading'
+                    : '')
               }
               style={heroStyle}
             >
-              {!weddingSite.heroImageUrl && <span>{initials}</span>}
+              {heroImageVisible ? null : heroImageUrl ? (
+                <span className="autumn-image-loading" role="status">
+                  <span
+                    className="autumn-image-loading__spinner"
+                    aria-hidden="true"
+                  />
+                  Memuat foto utama...
+                </span>
+              ) : (
+                <span>{initials}</span>
+              )}
             </div>
             <h1>{coupleName}</h1>
             <p className="autumn-cover__date">
@@ -376,6 +405,14 @@ export function AutumnGuestTemplate({
               <Heart className="h-4 w-4 fill-current" />
               Buka Undangan
             </button>
+            {heroImageUrl && !heroImageReady && (
+              <div className="autumn-cover__progress" role="status">
+                <span>Memuat foto utama...</span>
+                <span className="autumn-cover__progress-track">
+                  <span />
+                </span>
+              </div>
+            )}
           </div>
         </section>
       )}
@@ -397,58 +434,64 @@ export function AutumnGuestTemplate({
           </button>
         )}
 
-        <section
-          className={
-            'autumn-hero ' +
-            (!weddingSite.heroEnabled ? 'autumn-hero--compact' : '')
-          }
-          id="home"
-        >
-          {weddingSite.heroEnabled && (
+        {weddingSite.heroEnabled && (
+          <section className="autumn-hero" id="home">
             <div
               className={
                 'autumn-hero__photo ' +
-                (weddingSite.heroImageUrl ? 'has-image' : '')
+                (heroImageVisible
+                  ? 'has-image'
+                  : heroImageUrl
+                    ? 'is-loading'
+                    : '')
               }
               style={heroStyle}
             >
-              {!weddingSite.heroImageUrl && (
+              {heroImageVisible ? null : heroImageUrl ? (
+                <span className="autumn-image-loading" role="status">
+                  <span
+                    className="autumn-image-loading__spinner"
+                    aria-hidden="true"
+                  />
+                  Memuat foto utama...
+                </span>
+              ) : (
                 <span className="autumn-hero__initials">{initials}</span>
               )}
             </div>
-          )}
-          <div className="autumn-hero__content">
-            <p className="autumn-eyebrow">With love and gratitude</p>
-            <h2>{coupleName}</h2>
-            <p className="autumn-hero__date">
-              {formatDate(weddingSite.weddingDate || mainEvent?.date)}
-            </p>
-            <p className="autumn-hero__intro">
-              Dengan penuh kebahagiaan, kami mengundang keluarga dan
-              sahabat untuk hadir dan menjadi bagian dari hari istimewa
-              kami.
-            </p>
-            <div className="autumn-hero__actions">
-              <button
-                type="button"
-                className="autumn-button autumn-button--primary"
-                onClick={downloadCalendar}
-              >
-                <CalendarPlus className="h-4 w-4" />
-                Simpan Tanggal
-              </button>
-              <button
-                type="button"
-                className="autumn-button autumn-button--secondary"
-                onClick={shareInvitation}
-              >
-                <Share2 className="h-4 w-4" />
-                Bagikan
-              </button>
+            <div className="autumn-hero__content">
+              <p className="autumn-eyebrow">With love and gratitude</p>
+              <h2>{coupleName}</h2>
+              <p className="autumn-hero__date">
+                {formatDate(weddingSite.weddingDate || mainEvent?.date)}
+              </p>
+              <p className="autumn-hero__intro">
+                Dengan penuh kebahagiaan, kami mengundang keluarga dan
+                sahabat untuk hadir dan menjadi bagian dari hari istimewa
+                kami.
+              </p>
+              <div className="autumn-hero__actions">
+                <button
+                  type="button"
+                  className="autumn-button autumn-button--primary"
+                  onClick={downloadCalendar}
+                >
+                  <CalendarPlus className="h-4 w-4" />
+                  Simpan Tanggal
+                </button>
+                <button
+                  type="button"
+                  className="autumn-button autumn-button--secondary"
+                  onClick={shareInvitation}
+                >
+                  <Share2 className="h-4 w-4" />
+                  Bagikan
+                </button>
+              </div>
             </div>
-          </div>
-          <ChevronDown className="autumn-hero__scroll h-5 w-5" />
-        </section>
+            <ChevronDown className="autumn-hero__scroll h-5 w-5" />
+          </section>
+        )}
 
         {weddingSite.quoteEnabled && weddingSite.quoteText && (
           <GuestQuoteSection
@@ -575,7 +618,53 @@ export function AutumnGuestTemplate({
           />
         )}
 
-        {hasStoryTimeline ? (
+        {weddingSite.storyEnabled && hasStoryContent && (
+          <section className="autumn-section autumn-section--paper" id="story">
+            <p className="autumn-eyebrow">Our story</p>
+            <h2>{weddingSite.storyTitle || 'Kisah Kami'}</h2>
+            {storyParagraphs.length > 0 && (
+              <div className="autumn-story">
+                {storyParagraphs.map((paragraph, index) => (
+                  <article key={index}>
+                    <span>{String(index + 1).padStart(2, '0')}</span>
+                    <p>{paragraph}</p>
+                  </article>
+                ))}
+              </div>
+            )}
+            {(storyImage1Url || storyImage2Url) && (
+              <div
+                className={
+                  'autumn-story__images ' +
+                  (storyImage1Url && storyImage2Url
+                    ? ''
+                    : 'autumn-story__images--single')
+                }
+              >
+                {[storyImage1Url, storyImage2Url]
+                  .filter((image): image is string => Boolean(image))
+                  .map((image, index) => (
+                    <button
+                      type="button"
+                      key={image + index}
+                      className="autumn-story__image"
+                      onClick={() => setSelectedImage(image)}
+                      aria-label={'Buka foto cerita ' + String(index + 1)}
+                    >
+                      <img
+                        src={image}
+                        alt={'Foto cerita ' + String(index + 1)}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    </button>
+                  ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {hasStoryTimeline && (
           <GuestStoryTimelineSection
             items={weddingSite.storyTimeline || []}
             title={weddingSite.storyTitle || 'Perjalanan Kami'}
@@ -583,22 +672,6 @@ export function AutumnGuestTemplate({
             headingFont={weddingSite.headingFont}
             bodyFont={weddingSite.bodyFont}
           />
-        ) : (
-          weddingSite.storyEnabled &&
-          storyParagraphs.length > 0 && (
-          <section className="autumn-section autumn-section--paper" id="story">
-            <p className="autumn-eyebrow">Our story</p>
-            <h2>{weddingSite.storyTitle || 'Kisah Kami'}</h2>
-            <div className="autumn-story">
-              {storyParagraphs.map((paragraph, index) => (
-                <article key={index}>
-                  <span>{String(index + 1).padStart(2, '0')}</span>
-                  <p>{paragraph}</p>
-                </article>
-              ))}
-            </div>
-          </section>
-          )
         )}
 
         {hasGallery && (
@@ -606,7 +679,7 @@ export function AutumnGuestTemplate({
             <p className="autumn-eyebrow">Captured moments</p>
             <h2>{weddingSite.galleryTitle || 'Galeri Kami'}</h2>
             <div className="autumn-gallery">
-              {weddingSite.galleryImages.map((image, index) => (
+              {galleryImages.map((image, index) => (
                 <button
                   type="button"
                   key={image + index}
@@ -617,6 +690,8 @@ export function AutumnGuestTemplate({
                   <img
                     src={image}
                     alt={'Momen pernikahan ' + String(index + 1)}
+                    loading="lazy"
+                    decoding="async"
                   />
                   <span>
                     <Image className="h-4 w-4" />
@@ -734,6 +809,8 @@ export function AutumnGuestTemplate({
           <img
             src={selectedImage}
             alt="Pratinjau galeri"
+            loading="eager"
+            decoding="async"
             onClick={(event) => event.stopPropagation()}
           />
         </div>

@@ -2,6 +2,8 @@
 import '../styles/global.css';
 import GuestPage from '../components/guest/GuestPage';
 import { Toaster } from '../components/ui/sonner';
+import prisma from '../lib/prisma';
+import { normalizeImgproxyUrl } from '../lib/media-url';
 
 export const prerender = false;
 
@@ -10,14 +12,87 @@ const { slug } = Astro.params;
 if (!slug) {
   return Astro.redirect('/login');
 }
+
+const publicOrigin = import.meta.env.PUBLIC_SITE_URL ||
+  'https://invitation.fgdev.tech';
+const canonicalUrl = new URL('/' + slug, publicOrigin).toString();
+const currentUrl = new URL('/' + slug + Astro.url.search, publicOrigin);
+const guestName = Astro.url.searchParams.get('to')?.trim();
+
+let publishedWeddingSite: {
+  isPublished: boolean;
+  brideName: string | null;
+  groomName: string | null;
+  weddingDate: Date | null;
+  heroImageUrl: string | null;
+} | null = null;
+
+try {
+  publishedWeddingSite = await prisma.weddingSite.findUnique({
+    where: { slug },
+    select: {
+      isPublished: true,
+      brideName: true,
+      groomName: true,
+      weddingDate: true,
+      heroImageUrl: true,
+    },
+  });
+} catch (error) {
+  console.error('Failed to load invitation metadata:', error);
+}
+
+const publicSite = publishedWeddingSite?.isPublished
+  ? publishedWeddingSite
+  : null;
+const coupleName =
+  [publicSite?.brideName, publicSite?.groomName]
+    .filter(Boolean)
+    .join(' & ') || 'Wedding Invitation';
+const pageTitle = guestName
+  ? `${coupleName} — Untuk ${guestName}`
+  : `Undangan Pernikahan ${coupleName}`;
+const pageDescription = guestName
+  ? `Undangan pernikahan ${coupleName} untuk ${guestName}.`
+  : `Undangan pernikahan ${coupleName}.`;
+
+let ogImageUrl = '';
+if (publicSite?.heroImageUrl) {
+  try {
+    const normalizedHeroImageUrl = normalizeImgproxyUrl(
+      publicSite.heroImageUrl,
+    );
+    ogImageUrl = new URL(
+      normalizedHeroImageUrl || publicSite.heroImageUrl,
+      publicOrigin,
+    ).toString();
+  } catch {
+    ogImageUrl = '';
+  }
+}
 ---
 
-<html lang="en">
+<html lang="id">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Wedding Invitation</title>
+    <title>{pageTitle}</title>
+    <meta name="description" content={pageDescription} />
+    <link rel="canonical" href={canonicalUrl} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Weddingly" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDescription} />
+    <meta property="og:url" content={currentUrl.toString()} />
+    {ogImageUrl && (
+      <>
+        <meta property="og:image" content={ogImageUrl} />
+        <meta property="og:image:alt" content={`Foto ${coupleName}`} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:image" content={ogImageUrl} />
+      </>
+    )}
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />

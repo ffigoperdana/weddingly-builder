@@ -1,3 +1,6 @@
+import { normalizeImgproxyUrl } from '../../lib/media-url';
+import { useImageReady } from './useImageReady';
+
 interface HeroSectionProps {
   brideName?: string;
   groomName?: string;
@@ -17,6 +20,12 @@ export function GuestHeroSection({
   headingFont = 'Playfair Display',
   guestName,
 }: HeroSectionProps) {
+  const normalizedHeroImageUrl = normalizeImgproxyUrl(heroImageUrl);
+  const heroImageReady = useImageReady(normalizedHeroImageUrl);
+  const heroImageVisible = Boolean(
+    normalizedHeroImageUrl && heroImageReady,
+  );
+
   const formatDate = (date: Date | string | null | undefined) => {
     if (!date) return '';
     const d = typeof date === 'string' ? new Date(date) : date;
@@ -31,14 +40,24 @@ export function GuestHeroSection({
   return (
     <section
       className="relative min-h-screen flex items-center justify-center text-white overflow-hidden"
+      aria-busy={Boolean(normalizedHeroImageUrl && !heroImageReady)}
       style={{
-        backgroundImage: heroImageUrl
-          ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(${heroImageUrl})`
+        backgroundImage: heroImageVisible
+          ? `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url(${normalizedHeroImageUrl})`
           : `linear-gradient(135deg, ${primaryColor} 0%, #ffffff 100%)`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
     >
+      {normalizedHeroImageUrl && !heroImageReady && (
+        <div
+          className="absolute inset-x-0 top-0 z-20 h-1 overflow-hidden bg-white/25"
+          role="progressbar"
+          aria-label="Memuat foto utama"
+        >
+          <div className="h-full w-1/3 animate-pulse bg-white" />
+        </div>
+      )}
       <div className="relative z-10 text-center px-4 py-16">
         <div className="max-w-4xl mx-auto">
           {/* Personalized Greeting */}
@@ -46,10 +65,10 @@ export function GuestHeroSection({
             <p
               className="text-lg sm:text-xl md:text-2xl font-light mb-4 tracking-wide"
               style={{
-                textShadow: heroImageUrl
+                textShadow: heroImageVisible
                   ? '1px 1px 2px rgba(0,0,0,0.5)'
                   : 'none',
-                color: heroImageUrl ? '#ffffff' : '#666',
+                color: heroImageVisible ? '#ffffff' : '#666',
                 fontFamily: headingFont,
               }}
             >
@@ -61,10 +80,10 @@ export function GuestHeroSection({
           <p
             className="text-base sm:text-lg md:text-xl font-light mb-6 tracking-wide"
             style={{
-              textShadow: heroImageUrl
+              textShadow: heroImageVisible
                 ? '1px 1px 2px rgba(0,0,0,0.5)'
                 : 'none',
-              color: heroImageUrl ? '#ffffff' : '#666',
+              color: heroImageVisible ? '#ffffff' : '#666',
             }}
           >
             You are cordially invited to the wedding of
@@ -83,10 +102,10 @@ export function GuestHeroSection({
             className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-bold mb-6 drop-shadow-lg"
             style={{
               fontFamily: headingFont,
-              textShadow: heroImageUrl
+              textShadow: heroImageVisible
                 ? '2px 2px 4px rgba(0,0,0,0.5)'
                 : 'none',
-              color: heroImageUrl ? '#ffffff' : '#333',
+              color: heroImageVisible ? '#ffffff' : '#333',
             }}
           >
             {brideName} & {groomName}
@@ -97,10 +116,10 @@ export function GuestHeroSection({
             <p
               className="text-xl sm:text-2xl md:text-3xl font-light tracking-wide"
               style={{
-                textShadow: heroImageUrl
+                textShadow: heroImageVisible
                   ? '1px 1px 2px rgba(0,0,0,0.5)'
                   : 'none',
-                color: heroImageUrl ? '#ffffff' : '#666',
+                color: heroImageVisible ? '#ffffff' : '#666',
               }}
             >
               {formatDate(weddingDate)}
@@ -118,7 +137,7 @@ export function GuestHeroSection({
               viewBox="0 0 24 24"
               stroke="currentColor"
               style={{
-                color: heroImageUrl ? '#ffffff' : primaryColor,
+                color: heroImageVisible ? '#ffffff' : primaryColor,
               }}
             >
               <path d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
