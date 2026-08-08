@@ -33,6 +33,7 @@ interface RSVPFormProps {
   guestName?: string;
   locale?: 'en' | 'id';
   guestCountEnabled?: boolean;
+  messageEnabled?: boolean;
 }
 
 export function RSVPForm({
@@ -42,6 +43,7 @@ export function RSVPForm({
   guestName,
   locale = 'en',
   guestCountEnabled = false,
+  messageEnabled = true,
 }: RSVPFormProps) {
   const [submitted, setSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -276,17 +278,18 @@ export function RSVPForm({
         </div>
       )}
 
-      {/* Message */}
-      <div>
-        <label className="block text-sm font-medium mb-2">
-          {copy.message}
-        </label>
-        <Textarea
-          {...register('message')}
-          placeholder={copy.messagePlaceholder}
-          className="w-full min-h-[100px]"
-        />
-      </div>
+      {messageEnabled && (
+        <div>
+          <label className="block text-sm font-medium mb-2">
+            {copy.message}
+          </label>
+          <Textarea
+            {...register('message')}
+            placeholder={copy.messagePlaceholder}
+            className="w-full min-h-[100px]"
+          />
+        </div>
+      )}
 
       {/* Submit Button */}
       <Button

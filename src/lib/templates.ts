@@ -1,4 +1,4 @@
-export const WEDDING_TEMPLATE_IDS = ['classic', 'autumn'] as const;
+export const WEDDING_TEMPLATE_IDS = ['classic', 'autumn', 'flory'] as const;
 
 export type WeddingTemplateId = (typeof WEDDING_TEMPLATE_IDS)[number];
 
@@ -14,6 +14,12 @@ export const WEDDING_TEMPLATES = [
     name: 'Autumn Pop-up',
     description:
       'Undangan hangat bernuansa autumn dengan cover pop-up, countdown, kartu acara, dan galeri.',
+  },
+  {
+    id: 'flory',
+    name: 'Flory Garden',
+    description:
+      'Undangan cerah penuh bunga, pepohonan, dan bingkai foto bernuansa taman romantis.',
   },
 ] as const satisfies ReadonlyArray<{
   id: WeddingTemplateId;

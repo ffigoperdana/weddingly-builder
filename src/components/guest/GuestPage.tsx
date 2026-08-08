@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PasswordPrompt } from './PasswordPrompt';
 import { EnvelopeInvitation } from './EnvelopeInvitation';
 import { GuestHeroSection } from './GuestHeroSection';
@@ -22,10 +22,25 @@ import { CornerDecorations } from './decorations/CornerDecorations';
 import { SectionDivider } from './decorations/SectionDivider';
 import { MusicPlayer } from './MusicPlayer';
 import { AutumnGuestTemplate } from './AutumnGuestTemplate';
+import { FloryGuestTemplate } from './FloryGuestTemplate';
 import type { GuestWeddingSite } from './types';
 
 interface GuestPageProps {
   slug: string;
+}
+
+/**
+ * Keep Classic Romance sections in normal document flow. The previous
+ * Framer Motion + useInView wrapper created one observer and one animation
+ * per section, which made long invitations expensive to scroll.
+ */
+function ScrollAnimationWrapper({
+  children,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) {
+  return <div className="classic-section-wrapper">{children}</div>;
 }
 
 export default function GuestPage({ slug }: GuestPageProps) {
@@ -47,34 +62,6 @@ export default function GuestPage({ slug }: GuestPageProps) {
     if ((window as any).playWeddingMusic) {
       (window as any).playWeddingMusic();
     }
-  };
-
-  // Scroll animation component
-  const ScrollAnimationWrapper = ({
-    children,
-    delay = 0,
-  }: {
-    children: React.ReactNode;
-    delay?: number;
-  }) => {
-    const ref = useRef(null);
-    const isInView = useInView(ref, {
-      once: true,
-      margin: '-100px',
-    });
-
-    return (
-      <motion.div
-        ref={ref}
-        initial={{ opacity: 0, y: 50 }}
-        animate={
-          isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 50 }
-        }
-        transition={{ duration: 0.8, delay }}
-      >
-        {children}
-      </motion.div>
-    );
   };
 
   useEffect(() => {
@@ -194,6 +181,15 @@ export default function GuestPage({ slug }: GuestPageProps) {
     );
   }
 
+  if (weddingSite.templateId === 'flory') {
+    return (
+      <FloryGuestTemplate
+        weddingSite={weddingSite}
+        guestName={guestName || undefined}
+      />
+    );
+  }
+
   return (
     <>
       {/* Music Player - Always shown if enabled */}
@@ -234,7 +230,7 @@ export default function GuestPage({ slug }: GuestPageProps) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8 }}
-          className="relative"
+          className="classic-invitation relative"
           style={{
             fontFamily: weddingSite.bodyFont,
           }}
@@ -469,6 +465,7 @@ export default function GuestPage({ slug }: GuestPageProps) {
                         guestCountEnabled={
                           weddingSite.rsvpGuestCountEnabled
                         }
+                        messageEnabled={!weddingSite.wishesEnabled}
                       />
                     </div>
                   </div>

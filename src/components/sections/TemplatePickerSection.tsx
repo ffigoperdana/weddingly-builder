@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check, Heart, Leaf } from 'lucide-react';
+import { Check, Flower2, Heart, Leaf } from 'lucide-react';
 import { Controller, type Control } from 'react-hook-form';
 import {
   Card,
@@ -22,6 +22,27 @@ function TemplatePreview({
 }: {
   templateId: string;
 }) {
+  if (templateId === 'flory') {
+    return (
+      <div className="relative h-36 overflow-hidden rounded-lg bg-[#fff8df] p-4 shadow-inner">
+        <div className="absolute -left-5 bottom-0 h-24 w-20 rounded-t-[100%] bg-[#d7984a]/45 blur-sm" />
+        <div className="absolute -right-5 top-0 h-24 w-24 rounded-b-[100%] bg-[#f0bd58]/45 blur-sm" />
+        <div className="absolute left-1/2 top-2 h-24 w-20 -translate-x-1/2 rounded-t-[3rem] border-4 border-[#f5e7bd] bg-white/80 shadow-sm" />
+        <div className="absolute left-5 top-3 text-xl text-[#b55d3e]">✿</div>
+        <div className="absolute bottom-2 right-5 text-2xl text-[#b55d3e]">✿</div>
+        <div className="relative flex h-full flex-col items-center justify-between pb-1 pt-3 text-center">
+          <div className="relative z-10 flex flex-col items-center gap-1">
+            <Flower2 className="h-4 w-4 text-[#9a3517]" />
+            <span className="font-serif text-lg italic text-[#6f2c18]">A &amp; B</span>
+          </div>
+          <span className="relative z-10 rounded-full bg-[#fff8df]/90 px-2 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#a44b2a]">
+            Flory garden
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   if (templateId === 'autumn') {
     return (
       <div className="relative h-36 overflow-hidden rounded-lg bg-[#32180f] p-4 text-[#fff9e8] shadow-inner">
@@ -85,7 +106,7 @@ export function TemplatePickerSection({
           name="templateId"
           control={control}
           render={({ field }) => (
-            <div className="grid gap-4 md:grid-cols-2">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {templates.map((template) => {
                 const isSelected = field.value === template.id;
 

@@ -125,3 +125,9 @@
   overscroll-behavior: contain;
   scrollbar-gutter: stable;
 }
+
+/* Classic Romance only: defer rendering of sections outside the viewport. */
+.classic-section-wrapper {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}

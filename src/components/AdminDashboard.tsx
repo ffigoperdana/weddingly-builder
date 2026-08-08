@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import BuilderForm from './BuilderForm';
 import RSVPList from './RSVPList';
 import { Button } from './ui/button';
-import { LogOut } from 'lucide-react';
+import { ExternalLink, LogOut } from 'lucide-react';
 import type { WeddingSite } from '../lib/validations';
 import { getWeddingTemplate } from '../lib/templates';
 
@@ -78,10 +78,25 @@ export default function AdminDashboard() {
                 </p>
               )}
             </div>
-            <Button variant="ghost" onClick={handleLogout}>
-              <LogOut className="mr-2 h-4 w-4" />
-              Logout
-            </Button>
+            <div className="flex items-center gap-2">
+              {weddingSite?.isPublished && weddingSite.slug && (
+                <Button asChild variant="outline">
+                  <a
+                    href={`/${weddingSite.slug}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label="Preview published wedding website"
+                  >
+                    <ExternalLink className="h-4 w-4" />
+                    Preview
+                  </a>
+                </Button>
+              )}
+              <Button variant="ghost" onClick={handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </Button>
+            </div>
           </div>
         </div>
       </header>

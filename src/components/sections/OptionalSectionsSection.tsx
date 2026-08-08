@@ -438,6 +438,10 @@ export function OptionalSectionsSection({
                   disembunyikan. Kamu dapat menghapus ucapan dari daftar
                   moderasi di bawah ini.
                 </p>
+                <p className="text-xs text-muted-foreground">
+                  Karena Wedding Wishes aktif, kolom ucapan di RSVP
+                  disembunyikan agar tamu hanya menulis ucapan di satu tempat.
+                </p>
                 <WeddingWishesManager
                   enabled={wishesEnabled}
                   hasSavedSite={hasSavedSite}
