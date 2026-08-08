@@ -20,6 +20,7 @@ import { Input } from '../ui/input';
 import { ImageUpload } from '../ImageUpload';
 import { WeddingWishesManager } from '../WeddingWishesManager';
 import type { WeddingSiteFormData } from '../../lib/validations';
+import { DEFAULT_DRESS_CODE_COLORS } from '../../lib/dress-code';
 
 interface OptionalSectionsSectionProps {
   register: UseFormRegister<WeddingSiteFormData>;
@@ -33,14 +34,6 @@ interface OptionalSectionsSectionProps {
   >;
   hasSavedSite: boolean;
 }
-
-const defaultDressCodeColors = [
-  '#5f2e20',
-  '#a84d28',
-  '#d18a38',
-  '#e5bf72',
-  '#6e6542',
-];
 
 function SectionToggle({
   name,
@@ -269,7 +262,7 @@ export function OptionalSectionsSection({
                       Palet warna
                     </label>
                     <div className="flex flex-wrap gap-3">
-                      {defaultDressCodeColors.map((fallback, index) => {
+                      {DEFAULT_DRESS_CODE_COLORS.map((fallback, index) => {
                         const colors = field.value || [];
                         const color = colors[index] || fallback;
                         return (

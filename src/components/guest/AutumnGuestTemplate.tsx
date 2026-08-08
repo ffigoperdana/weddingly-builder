@@ -8,6 +8,8 @@ import {
 import {
   CalendarPlus,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Clock3,
   Heart,
   Image,
@@ -44,6 +46,11 @@ interface Countdown {
   hours: string;
   minutes: string;
   seconds: string;
+}
+
+interface AutumnLightboxState {
+  images: string[];
+  index: number;
 }
 
 function toDate(value?: string) {
@@ -136,9 +143,11 @@ export function AutumnGuestTemplate({
 }: AutumnGuestTemplateProps) {
   const [isOpened, setIsOpened] = useState(false);
   const [isMusicPlaying, setIsMusicPlaying] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [lightbox, setLightbox] =
+    useState<AutumnLightboxState | null>(null);
   const [utilityMessage, setUtilityMessage] = useState('');
   const audioRef = useRef<HTMLAudioElement>(null);
+  const lightboxTouchStartX = useRef<number | null>(null);
 
   const mainEvent = weddingSite.events[0];
   const targetDate = useMemo(
@@ -158,6 +167,9 @@ export function AutumnGuestTemplate({
   const heroImageVisible = Boolean(heroImageUrl && heroImageReady);
   const storyImage1Url = normalizeImgproxyUrl(weddingSite.storyImage1Url);
   const storyImage2Url = normalizeImgproxyUrl(weddingSite.storyImage2Url);
+  const storyImages = [storyImage1Url, storyImage2Url].filter(
+    (image): image is string => Boolean(image),
+  );
   const galleryImages = weddingSite.galleryImages
     .map((image) => normalizeImgproxyUrl(image))
     .filter((image): image is string => Boolean(image));
@@ -187,6 +199,27 @@ export function AutumnGuestTemplate({
       weddingSite.storyTimelineEnabled &&
         weddingSite.storyTimeline?.length,
     );
+  const selectedImage = lightbox
+    ? lightbox.images[lightbox.index]
+    : null;
+
+  const openLightbox = (images: string[], index: number) => {
+    setLightbox({ images, index });
+  };
+
+  const moveLightbox = (direction: number) => {
+    setLightbox((current) => {
+      if (!current || current.images.length < 2) {
+        return current;
+      }
+
+      const nextIndex =
+        (current.index + direction + current.images.length) %
+        current.images.length;
+
+      return { ...current, index: nextIndex };
+    });
+  };
 
   const themeStyle = {
     '--autumn-primary': weddingSite.primaryColor || '#a84824',
@@ -236,19 +269,38 @@ export function AutumnGuestTemplate({
   }, []);
 
   useEffect(() => {
-    if (!selectedImage) {
+    if (!lightbox) {
       return;
     }
 
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setSelectedImage(null);
+        setLightbox(null);
+      } else if (event.key === 'ArrowLeft') {
+        event.preventDefault();
+        moveLightbox(-1);
+      } else if (event.key === 'ArrowRight') {
+        event.preventDefault();
+        moveLightbox(1);
       }
     };
 
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
-  }, [selectedImage]);
+  }, [lightbox]);
+
+  useEffect(() => {
+    if (!lightbox) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [lightbox]);
 
   useEffect(() => {
     if (!utilityMessage) {
@@ -280,6 +332,31 @@ export function AutumnGuestTemplate({
     if (weddingSite.musicEnabled && weddingSite.musicUrl) {
       startMusic();
     }
+  };
+
+  const handleLightboxTouchStart = (
+    event: React.TouchEvent<HTMLDivElement>,
+  ) => {
+    lightboxTouchStartX.current =
+      event.changedTouches[0]?.clientX ?? null;
+  };
+
+  const handleLightboxTouchEnd = (
+    event: React.TouchEvent<HTMLDivElement>,
+  ) => {
+    const startX = lightboxTouchStartX.current;
+    lightboxTouchStartX.current = null;
+
+    if (startX === null) {
+      return;
+    }
+
+    const endX = event.changedTouches[0]?.clientX;
+    if (endX === undefined || Math.abs(endX - startX) < 50) {
+      return;
+    }
+
+    moveLightbox(endX > startX ? -1 : 1);
   };
 
   const toggleMusic = () => {
@@ -380,7 +457,9 @@ export function AutumnGuestTemplate({
           aria-label="Pembuka undangan"
         >
           <div className="autumn-cover__card">
-            <p className="autumn-eyebrow">The wedding invitation</p>
+            <p className="autumn-eyebrow autumn-cover__eyebrow">
+              The wedding invitation
+            </p>
             <div
               className={
                 'autumn-cover__portrait ' +
@@ -665,14 +744,12 @@ export function AutumnGuestTemplate({
                     : 'autumn-story__images--single')
                 }
               >
-                {[storyImage1Url, storyImage2Url]
-                  .filter((image): image is string => Boolean(image))
-                  .map((image, index) => (
+                {storyImages.map((image, index) => (
                     <button
                       type="button"
                       key={image + index}
                       className="autumn-story__image"
-                      onClick={() => setSelectedImage(image)}
+                      onClick={() => openLightbox(storyImages, index)}
                       aria-label={'Buka foto cerita ' + String(index + 1)}
                     >
                       <img
@@ -708,7 +785,7 @@ export function AutumnGuestTemplate({
                   type="button"
                   key={image + index}
                   className="autumn-gallery__item"
-                  onClick={() => setSelectedImage(image)}
+                  onClick={() => openLightbox(galleryImages, index)}
                   aria-label={'Buka foto ' + String(index + 1)}
                 >
                   <img
@@ -815,29 +892,98 @@ export function AutumnGuestTemplate({
         </div>
       )}
 
-      {selectedImage && (
+      {lightbox && selectedImage && (
         <div
           className="autumn-lightbox"
           role="dialog"
           aria-modal="true"
           aria-label="Pratinjau foto"
-          onClick={() => setSelectedImage(null)}
+          onClick={() => setLightbox(null)}
         >
           <button
             type="button"
             className="autumn-lightbox__close"
-            onClick={() => setSelectedImage(null)}
+            onClick={() => setLightbox(null)}
             aria-label="Tutup pratinjau"
           >
             <X className="h-5 w-5" />
           </button>
-          <img
-            src={selectedImage}
-            alt="Pratinjau galeri"
-            loading="eager"
-            decoding="async"
+          <div
+            className="autumn-lightbox__content"
             onClick={(event) => event.stopPropagation()}
-          />
+          >
+            {lightbox.images.length > 1 ? (
+              <button
+                type="button"
+                className="autumn-lightbox__nav autumn-lightbox__nav--previous"
+                onClick={() => moveLightbox(-1)}
+                aria-label="Foto sebelumnya"
+              >
+                <ChevronLeft className="h-6 w-6" />
+              </button>
+            ) : (
+              <span />
+            )}
+            <div
+              className="autumn-lightbox__media"
+              onTouchStart={handleLightboxTouchStart}
+              onTouchEnd={handleLightboxTouchEnd}
+            >
+              <img
+                key={selectedImage}
+                src={selectedImage}
+                alt={`Pratinjau foto ${lightbox.index + 1}`}
+                loading="eager"
+                decoding="async"
+              />
+              <span className="autumn-lightbox__counter">
+                {lightbox.index + 1} / {lightbox.images.length}
+              </span>
+            </div>
+            {lightbox.images.length > 1 ? (
+              <button
+                type="button"
+                className="autumn-lightbox__nav autumn-lightbox__nav--next"
+                onClick={() => moveLightbox(1)}
+                aria-label="Foto berikutnya"
+              >
+                <ChevronRight className="h-6 w-6" />
+              </button>
+            ) : (
+              <span />
+            )}
+            <div
+              className="autumn-lightbox__thumbs"
+              aria-label="Pilih foto"
+            >
+              {lightbox.images.map((image, index) => (
+                <button
+                  type="button"
+                  key={image + index}
+                  className={
+                    'autumn-lightbox__thumb ' +
+                    (index === lightbox.index ? 'is-active' : '')
+                  }
+                  onClick={() =>
+                    setLightbox((current) =>
+                      current ? { ...current, index } : current,
+                    )
+                  }
+                  aria-label={'Lihat foto ' + String(index + 1)}
+                  aria-current={
+                    index === lightbox.index ? 'true' : undefined
+                  }
+                >
+                  <img
+                    src={image}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

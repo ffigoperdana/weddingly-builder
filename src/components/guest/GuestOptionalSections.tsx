@@ -12,6 +12,7 @@ import {
 import { Input } from '../ui/input';
 import { Textarea } from '../ui/textarea';
 import { normalizeImgproxyUrl } from '../../lib/media-url';
+import { resolveDressCodeColors } from '../../lib/dress-code';
 import type {
   BankAccount,
   StoryTimelineItem,
@@ -163,13 +164,13 @@ export function GuestCoupleDetailsSection({
                 )}
               </div>
               <p
-                className="mt-5 text-xs font-bold uppercase tracking-widest"
+                className="guest-couple-details-section__label mt-5 text-xs font-bold uppercase tracking-widest"
                 style={{ color: primaryColor }}
               >
                 {person.label}
               </p>
               <h3
-                className="mt-2 text-2xl font-bold text-gray-800"
+                className="guest-couple-details-section__name mt-2 text-2xl font-bold text-gray-800"
                 style={{ fontFamily: headingFont }}
               >
                 {person.fullName || person.name}
@@ -294,6 +295,8 @@ export function GuestDressCodeSection({
   headingFont = 'Playfair Display',
   bodyFont = 'Lato',
 }: GuestDressCodeSectionProps) {
+  const resolvedColors = resolveDressCodeColors(colors);
+
   return (
     <section
       className="guest-optional-section guest-dress-code-section py-14 px-4"
@@ -317,9 +320,9 @@ export function GuestDressCodeSection({
             {text}
           </p>
         )}
-        {colors.length > 0 && (
+        {resolvedColors.length > 0 && (
           <div className="mt-7 flex flex-wrap justify-center gap-3">
-            {colors.map((color) => (
+            {resolvedColors.map((color) => (
               <span
                 key={color}
                 title={color}
@@ -500,7 +503,7 @@ export function GuestRegistryDetailsSection({
           </h2>
         </div>
         {registryText && (
-          <p className="mx-auto mb-7 max-w-2xl whitespace-pre-line text-center text-sm leading-relaxed text-gray-600">
+          <p className="guest-registry-details-section__description mx-auto mb-7 max-w-2xl whitespace-pre-line text-center text-sm leading-relaxed text-gray-600">
             {registryText}
           </p>
         )}

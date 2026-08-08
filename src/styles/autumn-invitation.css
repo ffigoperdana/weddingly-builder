@@ -175,6 +175,15 @@
   text-shadow: 0 3px 18px rgba(0, 0, 0, 0.34);
 }
 
+.autumn-cover__eyebrow {
+  margin-bottom: 22px !important;
+  color: color-mix(in srgb, var(--autumn-primary) 82%, var(--autumn-ink)) !important;
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  line-height: 1.45;
+  text-shadow: 0 1px 0 rgba(255, 253, 244, 0.8);
+}
+
 .autumn-cover__portrait.is-loading,
 .autumn-hero__photo.is-loading {
   background:
@@ -541,6 +550,14 @@
   box-shadow: 0 12px 26px rgba(70, 30, 16, 0.08);
 }
 
+.autumn-invitation .guest-couple-details-section__label {
+  margin-top: 24px !important;
+}
+
+.autumn-invitation .guest-couple-details-section__name {
+  margin-top: 14px !important;
+}
+
 .autumn-invitation .guest-couple-details-section h2,
 .autumn-invitation .guest-couple-details-section h3,
 .autumn-invitation .guest-story-timeline-section h2,
@@ -579,6 +596,10 @@
 .autumn-invitation .guest-registry-details-section > div > div {
   border-color: var(--autumn-line);
   background: rgba(255, 253, 244, 0.88);
+}
+
+.autumn-invitation .guest-registry-details-section__description {
+  margin-bottom: 38px !important;
 }
 
 .autumn-invitation .guest-wishes-section input,
@@ -1140,13 +1161,106 @@
   place-items: center;
 }
 
-.autumn-lightbox img {
-  max-width: min(100%, 720px);
-  max-height: 85vh;
+.autumn-lightbox__content {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 12px;
+  width: min(100%, 920px);
+  max-height: calc(100vh - 40px);
+  align-items: center;
+  cursor: default;
+}
+
+.autumn-lightbox__media {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+  place-items: center;
+  touch-action: pan-y;
+}
+
+.autumn-lightbox__media > img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 170px);
   border-radius: 16px;
   box-shadow: 0 22px 60px rgba(0, 0, 0, 0.45);
   cursor: default;
   object-fit: contain;
+}
+
+.autumn-lightbox__counter {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  padding: 5px 9px;
+  border: 1px solid rgba(255, 249, 232, 0.24);
+  border-radius: 999px;
+  background: rgba(27, 11, 7, 0.62);
+  color: #fff9e8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.autumn-lightbox__nav {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  border: 1px solid rgba(255, 249, 232, 0.3);
+  border-radius: 50%;
+  background: rgba(255, 249, 232, 0.12);
+  color: #fff9e8;
+  place-items: center;
+  transition: background 180ms ease, border-color 180ms ease, transform 180ms ease;
+}
+
+.autumn-lightbox__nav:hover {
+  border-color: rgba(255, 249, 232, 0.62);
+  background: rgba(255, 249, 232, 0.24);
+  transform: scale(1.06);
+}
+
+.autumn-lightbox__thumbs {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 8px;
+  max-width: 100%;
+  padding: 4px 4px 2px;
+  overflow-x: auto;
+  justify-content: center;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 249, 232, 0.45) transparent;
+}
+
+.autumn-lightbox__thumb {
+  flex: 0 0 64px;
+  width: 64px;
+  height: 52px;
+  padding: 2px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 249, 232, 0.22);
+  border-radius: 9px;
+  background: rgba(255, 249, 232, 0.1);
+  opacity: 0.65;
+  transition: border-color 180ms ease, opacity 180ms ease, transform 180ms ease;
+}
+
+.autumn-lightbox__thumb:hover,
+.autumn-lightbox__thumb.is-active {
+  border-color: #f5d789;
+  opacity: 1;
+  transform: translateY(-2px);
+}
+
+.autumn-lightbox__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  object-fit: cover;
 }
 
 .autumn-lightbox__close {

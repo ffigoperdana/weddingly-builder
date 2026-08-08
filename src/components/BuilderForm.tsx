@@ -24,6 +24,7 @@ import { RegistrySection } from './sections/RegistrySection';
 import { MusicSection } from './sections/MusicSection';
 import { TemplatePickerSection } from './sections/TemplatePickerSection';
 import { OptionalSectionsSection } from './sections/OptionalSectionsSection';
+import { DEFAULT_DRESS_CODE_COLORS } from '../lib/dress-code';
 
 interface BuilderFormProps {
   initialData?: WeddingSite;
@@ -133,7 +134,9 @@ export default function BuilderForm({
       dressCodeEnabled: initialData?.dressCodeEnabled ?? false,
       dressCodeTitle: initialData?.dressCodeTitle || 'Dress Code',
       dressCodeText: initialData?.dressCodeText || '',
-      dressCodeColors: initialData?.dressCodeColors || [],
+      dressCodeColors: initialData?.dressCodeColors?.length
+        ? initialData.dressCodeColors
+        : [...DEFAULT_DRESS_CODE_COLORS],
 
       // Gallery Section
       galleryEnabled: initialData?.galleryEnabled ?? false,
@@ -241,7 +244,9 @@ export default function BuilderForm({
         dressCodeTitle:
           initialData.dressCodeTitle || 'Dress Code',
         dressCodeText: initialData.dressCodeText || '',
-        dressCodeColors: initialData.dressCodeColors || [],
+        dressCodeColors: initialData.dressCodeColors?.length
+          ? initialData.dressCodeColors
+          : [...DEFAULT_DRESS_CODE_COLORS],
         galleryEnabled: initialData.galleryEnabled ?? false,
         galleryTitle: initialData.galleryTitle || 'Our Gallery',
         galleryImages: initialData.galleryImages || [],
