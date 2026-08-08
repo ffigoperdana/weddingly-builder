@@ -158,7 +158,7 @@ export function ImageUpload({
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-md p-6 text-center cursor-pointer transition-colors ${
+          className={`min-w-0 cursor-pointer rounded-md border-2 border-dashed p-3 text-center transition-colors sm:p-6 ${
             dragActive
               ? 'border-primary bg-primary/5'
               : 'border-gray-300 hover:border-gray-400'
@@ -173,12 +173,12 @@ export function ImageUpload({
               </p>
             </div>
           ) : (
-            <div className="flex flex-col items-center gap-2">
-              <Upload className="h-8 w-8 text-muted-foreground" />
-              <p className="text-sm font-medium">
+            <div className="flex min-w-0 flex-col items-center gap-1.5 sm:gap-2">
+              <Upload className="h-7 w-7 shrink-0 text-muted-foreground sm:h-8 sm:w-8" />
+              <p className="break-words text-xs font-medium leading-tight sm:text-sm">
                 Click to upload or drag and drop
               </p>
-              <p className="text-xs text-muted-foreground">
+              <p className="break-words text-[11px] leading-tight text-muted-foreground sm:text-xs">
                 PNG, JPG, GIF up to 10MB
               </p>
             </div>

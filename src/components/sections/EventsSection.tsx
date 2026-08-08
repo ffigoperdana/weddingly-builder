@@ -79,7 +79,7 @@ export function EventsSection({
               </Button>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium">
                   Event Title *
@@ -111,7 +111,7 @@ export function EventsSection({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <Controller
                 name={`events.${index}.date`}
                 control={control}

@@ -58,29 +58,29 @@ export default function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="wedding-builder min-h-screen min-w-0 bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+          <div className="flex min-h-16 flex-col justify-center gap-2 py-3 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-0">
+            <div className="min-w-0">
+              <h1 className="truncate text-xl font-bold text-gray-900 sm:text-2xl">
                 Wedding Builder
               </h1>
               {weddingSite?.slug && (
-                <p className="text-sm text-gray-500">
+                <p className="truncate text-xs text-gray-500 sm:text-sm">
                   invitation.fgdev.tech/{weddingSite.slug}
                 </p>
               )}
               {weddingSite && (
-                <p className="text-xs text-gray-400">
+                <p className="truncate text-[11px] text-gray-400 sm:text-xs">
                   Template: {getWeddingTemplate(weddingSite.templateId).name}
                 </p>
               )}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto">
               {weddingSite?.isPublished && weddingSite.slug && (
-                <Button asChild variant="outline">
+                <Button asChild variant="outline" className="min-h-10 flex-1 sm:flex-none">
                   <a
                     href={`/${weddingSite.slug}`}
                     target="_blank"
@@ -92,7 +92,11 @@ export default function AdminDashboard() {
                   </a>
                 </Button>
               )}
-              <Button variant="ghost" onClick={handleLogout}>
+              <Button
+                variant="ghost"
+                onClick={handleLogout}
+                className="min-h-10 flex-1 sm:flex-none"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Logout
               </Button>
@@ -104,7 +108,7 @@ export default function AdminDashboard() {
       {/* Tabs */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <nav className="flex space-x-8" aria-label="Tabs">
+          <nav className="flex min-w-max space-x-8" aria-label="Tabs">
             <button
               onClick={() => setActiveTab('builder')}
               className={`py-4 px-1 border-b-2 font-medium text-sm ${
@@ -130,7 +134,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="mx-auto min-w-0 max-w-7xl px-4 py-4 sm:px-6 sm:py-8 lg:px-8">
         {activeTab === 'builder' ? (
           <BuilderForm
             initialData={weddingSite ?? undefined}

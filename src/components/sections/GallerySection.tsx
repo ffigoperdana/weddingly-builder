@@ -88,9 +88,9 @@ export function GallerySection({
                 if (count === 2) return 'grid-cols-2';
                 if (count === 3) return 'grid-cols-2'; // 1 left, 2 right
                 if (count === 4) return 'grid-cols-2';
-                if (count === 5) return 'grid-cols-3'; // 2 left, 3 right
-                if (count >= 6) return 'grid-cols-3';
-                return 'grid-cols-3';
+                if (count === 5) return 'grid-cols-2 sm:grid-cols-3'; // 2 left, 3 right
+                if (count >= 6) return 'grid-cols-2 sm:grid-cols-3';
+                return 'grid-cols-2 sm:grid-cols-3';
               };
 
               const getImageSpan = (index: number, total: number) => {
@@ -118,14 +118,14 @@ export function GallerySection({
                   )}
 
                   <div
-                    className={`grid ${getGridLayout(
+                    className={`gallery-image-grid grid min-w-0 ${getGridLayout(
                       field.value.length,
-                    )} auto-rows-[8rem] gap-4`}
+                    )} auto-rows-[9.5rem] gap-4 sm:auto-rows-[8rem]`}
                   >
                     {field.value.map((url, index) => (
                       <div
                         key={index}
-                        className={`relative group ${getImageSpan(
+                        className={`group relative min-w-0 ${getImageSpan(
                           index,
                           field.value.length,
                         )}`}
@@ -161,7 +161,7 @@ export function GallerySection({
                               field.onChange([...field.value, url]);
                             }
                           }}
-                          className="h-full"
+                          className="gallery-upload h-full min-w-0"
                         />
                       </div>
                     )}

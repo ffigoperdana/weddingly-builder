@@ -369,7 +369,7 @@ export default function BuilderForm({
   return (
     <form
       onSubmit={handleSubmit(onSubmit, handleInvalid)}
-      className="space-y-6 pb-10"
+      className="min-w-0 space-y-6 pb-10"
     >
       {/* Publishing Status Badge */}
       {initialData && (
@@ -473,11 +473,11 @@ export default function BuilderForm({
           {actionStatus.message}
         </div>
       )}
-      <div className="flex gap-4 sticky bottom-0 bg-background py-4 border-t">
+      <div className="builder-actions sticky bottom-0 z-20 flex flex-col gap-2 border-t bg-background/95 py-3 backdrop-blur min-[480px]:flex-row min-[480px]:gap-4 sm:py-4">
         <Button
           type="submit"
           disabled={isSaving || isPublishing}
-          className="flex-1"
+          className="min-h-11 w-full min-[480px]:flex-1"
         >
           <Save className="mr-2 h-4 w-4" />
           {isSaving ? 'Saving...' : 'Save Draft'}
@@ -486,7 +486,7 @@ export default function BuilderForm({
           type="button"
           onClick={handlePublish}
           disabled={isSaving || isPublishing}
-          className="flex-1"
+          className="min-h-11 w-full min-[480px]:flex-1"
           variant="default"
         >
           {isPublishing ? 'Publishing...' : 'Publish Website'}
