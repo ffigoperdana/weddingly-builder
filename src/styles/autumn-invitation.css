@@ -592,14 +592,119 @@
   background: var(--autumn-paper-muted);
 }
 
-.autumn-invitation .guest-registry-details-section article,
-.autumn-invitation .guest-registry-details-section > div > div {
+.autumn-invitation .guest-registry-details-section {
+  background:
+    radial-gradient(circle at 8% 12%, rgba(212, 151, 74, 0.18), transparent 28%),
+    radial-gradient(circle at 92% 86%, rgba(168, 72, 36, 0.1), transparent 26%),
+    var(--autumn-paper-muted);
+}
+
+.autumn-invitation .guest-registry-details-section > div {
+  max-width: 520px;
+}
+
+.autumn-invitation .guest-registry-details-section__heading {
+  margin-bottom: 28px !important;
+}
+
+.autumn-invitation .guest-registry-details-section__heading > svg {
+  width: 44px;
+  height: 44px;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--autumn-primary) 28%, transparent);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--autumn-primary) 12%, #fffdf4);
+  color: var(--autumn-primary) !important;
+}
+
+.autumn-invitation .guest-registry-details-section article {
   border-color: var(--autumn-line);
   background: rgba(255, 253, 244, 0.88);
+  box-shadow: 0 14px 28px rgba(70, 30, 16, 0.1);
+}
+
+.autumn-invitation .guest-registry-details-section__heading h2 {
+  margin-top: 14px !important;
+  font-size: clamp(31px, 8vw, 40px) !important;
+  line-height: 1.08;
 }
 
 .autumn-invitation .guest-registry-details-section__description {
-  margin-bottom: 38px !important;
+  max-width: 330px;
+  margin-top: 0 !important;
+  margin-bottom: 27px !important;
+  color: var(--autumn-muted) !important;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.autumn-invitation .guest-registry-details-section__accounts {
+  gap: 14px;
+}
+
+.autumn-invitation .guest-registry-details-section__account {
+  display: flex;
+  flex-direction: column;
+  min-height: 188px;
+  padding: 20px !important;
+  border-radius: 20px;
+}
+
+.autumn-invitation .guest-registry-details-section__bank {
+  color: var(--autumn-muted) !important;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.autumn-invitation .guest-registry-details-section__number {
+  margin-top: 11px !important;
+  color: var(--autumn-primary) !important;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(23px, 6vw, 28px);
+}
+
+.autumn-invitation .guest-registry-details-section__owner {
+  margin-top: 6px !important;
+  color: var(--autumn-muted) !important;
+  font-size: 12px;
+}
+
+.autumn-invitation .guest-registry-details-section__copy {
+  margin-top: auto !important;
+  min-height: 38px;
+  padding: 9px 14px !important;
+  font-size: 12px;
+}
+
+.autumn-invitation .guest-registry-details-section__physical-gift {
+  margin-top: 16px !important;
+  padding: 22px 20px !important;
+  border: 1px dashed color-mix(in srgb, var(--autumn-primary) 38%, transparent);
+  border-radius: 20px;
+  background: rgba(255, 253, 244, 0.76);
+  box-shadow: 0 12px 24px rgba(70, 30, 16, 0.07);
+}
+
+.autumn-invitation .guest-registry-details-section__physical-gift svg {
+  width: 25px;
+  height: 25px;
+  padding: 5px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--autumn-primary) 13%, #fffdf4);
+}
+
+.autumn-invitation .guest-registry-details-section__physical-gift h3 {
+  margin-top: 10px !important;
+  color: var(--autumn-ink) !important;
+  font-size: 19px;
+}
+
+.autumn-invitation .guest-registry-details-section__physical-gift p {
+  margin-top: 7px !important;
+  color: var(--autumn-muted) !important;
+  font-size: 13px;
+  line-height: 1.65;
 }
 
 .autumn-invitation .guest-wishes-section input,

@@ -121,7 +121,7 @@ export function GuestCoupleDetailsSection({
       style={{ fontFamily: bodyFont }}
     >
       <div className="mx-auto max-w-5xl">
-        <div className="mb-10 text-center">
+        <div className="guest-registry-details-section__heading mb-10 text-center">
           <p
             className="text-xs font-bold uppercase tracking-widest"
             style={{ color: primaryColor }}
@@ -508,29 +508,29 @@ export function GuestRegistryDetailsSection({
           </p>
         )}
         {accounts.length > 0 && (
-          <div className="grid gap-4 md:grid-cols-2">
+          <div className="guest-registry-details-section__accounts grid gap-4 md:grid-cols-2">
             {accounts.map((account, index) => (
               <article
                 key={account.id || account.number || index}
-                className="rounded-xl bg-white p-5 shadow-md"
+                className="guest-registry-details-section__account rounded-xl bg-white p-5 shadow-md"
                 style={{ borderTop: '4px solid ' + secondaryColor }}
               >
-                <p className="text-sm font-semibold text-gray-600">
+                <p className="guest-registry-details-section__bank text-sm font-semibold text-gray-600">
                   {account.bank}
                 </p>
                 <p
-                  className="mt-3 text-2xl font-bold tracking-wider"
+                  className="guest-registry-details-section__number mt-3 text-2xl font-bold tracking-wider"
                   style={{ color: primaryColor }}
                 >
                   {account.number}
                 </p>
-                <p className="mt-2 text-sm text-gray-600">
+                <p className="guest-registry-details-section__owner mt-2 text-sm text-gray-600">
                   a.n. {account.owner}
                 </p>
                 <button
                   type="button"
                   onClick={() => copyAccountNumber(account.number)}
-                  className="mt-4 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold"
+                  className="guest-registry-details-section__copy mt-4 inline-flex items-center gap-2 rounded-full border px-4 py-2 text-xs font-semibold"
                   style={{
                     borderColor: primaryColor + '55',
                     color: primaryColor,
@@ -550,7 +550,7 @@ export function GuestRegistryDetailsSection({
           </div>
         )}
         {giftAddress && (
-          <div className="mt-5 rounded-xl bg-white p-5 text-center shadow-md">
+          <div className="guest-registry-details-section__physical-gift mt-5 rounded-xl bg-white p-5 text-center shadow-md">
             <MapPin
               className="mx-auto h-5 w-5"
               style={{ color: primaryColor }}
