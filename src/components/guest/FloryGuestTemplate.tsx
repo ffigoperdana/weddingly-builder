@@ -556,34 +556,36 @@ export function FloryGuestTemplate({
           />
         )}
 
-        <section className="flory-section flory-section--couple" id="couple">
-          <div className="flory-section__heading">
-            <p className="flory-eyebrow">The happy couple</p>
-            <h2>Kedua mempelai</h2>
-            <p>Semoga perjalanan ini selalu dipenuhi cinta dan keberkahan.</p>
-          </div>
-          <div className="flory-couple-cards">
-            {coupleCards.map((person) => (
-              <article key={person.label}>
-                <div className="flory-couple-cards__photo">
-                  {person.imageUrl ? (
-                    <img
-                      src={person.imageUrl}
-                      alt={person.name}
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ) : (
-                    <span>{person.name.charAt(0)}</span>
-                  )}
-                </div>
-                <p>{person.label}</p>
-                <h3>{person.name}</h3>
-              </article>
-            ))}
-          </div>
-          <Heart className="flory-couple-cards__heart h-5 w-5 fill-current" />
-        </section>
+        {!weddingSite.coupleDetailsEnabled && (
+          <section className="flory-section flory-section--couple" id="couple">
+            <div className="flory-section__heading">
+              <p className="flory-eyebrow">The happy couple</p>
+              <h2>Kedua mempelai</h2>
+              <p>Semoga perjalanan ini selalu dipenuhi cinta dan keberkahan.</p>
+            </div>
+            <div className="flory-couple-cards">
+              {coupleCards.map((person) => (
+                <article key={person.label}>
+                  <div className="flory-couple-cards__photo">
+                    {person.imageUrl ? (
+                      <img
+                        src={person.imageUrl}
+                        alt={person.name}
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    ) : (
+                      <span>{person.name.charAt(0)}</span>
+                    )}
+                  </div>
+                  <p>{person.label}</p>
+                  <h3>{person.name}</h3>
+                </article>
+              ))}
+            </div>
+            <Heart className="flory-couple-cards__heart h-5 w-5 fill-current" />
+          </section>
+        )}
 
         {weddingSite.coupleDetailsEnabled && (
           <GuestCoupleDetailsSection

@@ -597,26 +597,28 @@ export function AutumnGuestTemplate({
           />
         )}
 
-        <section className="autumn-section autumn-section--couple">
-          <p className="autumn-eyebrow">The happy couple</p>
-          <div className="autumn-couple">
-            <article>
-              <span className="autumn-couple__initial">
-                {brideName.charAt(0)}
-              </span>
-              <h2>{brideName}</h2>
-              <p>Mempelai wanita</p>
-            </article>
-            <Heart className="autumn-couple__heart h-5 w-5 fill-current" />
-            <article>
-              <span className="autumn-couple__initial">
-                {groomName.charAt(0)}
-              </span>
-              <h2>{groomName}</h2>
-              <p>Mempelai pria</p>
-            </article>
-          </div>
-        </section>
+        {!weddingSite.coupleDetailsEnabled && (
+          <section className="autumn-section autumn-section--couple" id="couple">
+            <p className="autumn-eyebrow">The happy couple</p>
+            <div className="autumn-couple">
+              <article>
+                <span className="autumn-couple__initial">
+                  {brideName.charAt(0)}
+                </span>
+                <h2>{brideName}</h2>
+                <p>Mempelai wanita</p>
+              </article>
+              <Heart className="autumn-couple__heart h-5 w-5 fill-current" />
+              <article>
+                <span className="autumn-couple__initial">
+                  {groomName.charAt(0)}
+                </span>
+                <h2>{groomName}</h2>
+                <p>Mempelai pria</p>
+              </article>
+            </div>
+          </section>
+        )}
 
         {weddingSite.coupleDetailsEnabled && (
           <GuestCoupleDetailsSection

@@ -117,6 +117,7 @@ export function GuestCoupleDetailsSection({
 
   return (
     <section
+      id="couple"
       className="guest-optional-section guest-couple-details-section bg-white py-16 px-4"
       style={{ fontFamily: bodyFont }}
     >
